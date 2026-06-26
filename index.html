@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMPORTADORA MORAZÁN</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <a href="#home" class="brand">
+      <img src="assets/images/logo.png" alt="IMPORTADORA MORAZÁN Logo" onerror="this.style.display='none'">
+    </a>
+
+    <nav class="nav-links">
+      <a href="#home" data-es="Inicio" data-zh="首页">Inicio</a>
+      <a href="#products" data-es="Productos" data-zh="产品">Productos</a>
+      <a href="#categories" data-es="Categorías" data-zh="分类">Categorías</a>
+      <a href="#order-status" data-es="Mi pedido" data-zh="我的订单">Mi pedido</a>
+      <a href="#contact" data-es="Contacto" data-zh="联系我们">Contacto</a>
+    </nav>
+
+    <div class="nav-actions">
+
+    <button id="menuBtn" class="menu-btn">
+        ☰
+    </button>
+
+    <button id="langBtn" class="pill-btn">
+        中文
+    </button>
+
+    <button id="cartBtn" class="pill-btn">
+        🛒 <span id="cartCount">0</span>
+    </button>
+
+    <button id="favoriteNavBtn" class="icon-btn heart-nav-btn" aria-label="Favoritos">
+        ❤️
+    </button>
+
+</div>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-card">
+        <p class="tagline"
+data-es="🚚 Envíos todo el país • Contáctanos"
+data-zh="🚚 全国配送 • 联系我们">
+🚚 Envíos para todo el país • Contáctanos
+</p>
+        <h1>
+    IMPORTADORA<br>
+    MORAZÁN
+</h1>
+        <p class="hero-text" data-es="Todo lo que necesitas en un solo lugar." data-zh="您需要的一切都在这里。">Todo lo que necesitas en un solo lugar.</p>
+        <a class="main-btn" href="#products" data-es="COMPRAR AHORA" data-zh="立即购买">COMPRAR AHORA</a>
+      </div>
+    </section>
+
+    <section id="categories" class="section">
+      <div class="section-title">
+        <h2 data-es="Categorías" data-zh="分类">Categorías</h2>
+      </div>
+
+      <div class="category-grid">
+        <button class="category-card active" data-category="all" onclick="filterProducts('all')">
+          <span>✨</span><strong data-es="Todo" data-zh="全部">Todo</strong>
+        </button>
+        <button class="category-card" data-category="bags" onclick="filterProducts('bags')">
+    <span>🎒</span>
+    <strong data-es="Mochilas" data-zh="背包">Mochilas</strong>
+</button>
+        <button class="category-card" data-category="socks" onclick="filterProducts('socks')">
+          <span>🧦</span><strong data-es="Medias" data-zh="袜子">Medias</strong>
+        </button>
+        <button class="category-card" data-category="shoes" onclick="filterProducts('shoes')">
+          <span>👟</span><strong data-es="Calzado" data-zh="鞋类">Calzado</strong>
+        </button>
+        <button class="category-card" data-category="perfume" onclick="filterProducts('perfume')">
+          <span>✦</span><strong data-es="Perfume" data-zh="香水">Perfume</strong>
+        </button>
+        <button class="category-card" data-category="men" onclick="filterProducts('men')">
+          <span>◆</span><strong data-es="Artículo Hombre" data-zh="男士用品">Artículo Hombre</strong>
+        </button>
+        <button class="category-card" data-category="rain" onclick="filterProducts('rain')">
+          <span>☔</span><strong data-es="Artículos lluvia" data-zh="雨具">Artículos lluvia</strong>
+        </button>
+        <button class="category-card" data-category="stuffed" onclick="filterProducts('stuffed')">
+          <span>🧸</span><strong data-es="Peluches" data-zh="毛绒玩具">Peluches</strong>
+        </button>
+        <button class="category-card" data-category="toys" onclick="filterProducts('toys')">
+          <span>🎁</span><strong data-es="Juguetes" data-zh="玩具">Juguetes</strong>
+        </button>
+        <button class="category-card" data-category="baby" onclick="filterProducts('baby')">
+          <span>👶</span><strong data-es="Productos para bebé" data-zh="婴儿用品">Productos para bebé</strong>
+        </button>
+        <button class="category-card" data-category="blankets" onclick="filterProducts('blankets')">
+          <span>▦</span><strong data-es="Cobijas" data-zh="毯子">Cobijas</strong>
+        </button>
+
+<button class="category-card" data-category="purses" onclick="filterProducts('purses')">
+    <span>👜</span>
+    <strong data-es="Carteras" data-zh="钱包">Carteras</strong>
+</button>
+
+<button class="category-card" data-category="pajamas" onclick="filterProducts('pajamas')">
+    <span>👚</span>
+    <strong data-es="Pijamas" data-zh="睡衣">Pijamas</strong>
+</button>
+        <button class="category-card" data-category="rugs" onclick="filterProducts('rugs')">
+          <span>◯</span><strong data-es="Alfombras" data-zh="地毯">Alfombras</strong>
+        </button>
+      </div>
+    </section>
+
+    <section id="products" class="section products-section">
+      <div class="section-title">
+        <h2 data-es="Productos" data-zh="产品">Productos</h2>
+        <p data-es="Busca productos al instante." data-zh="即时搜索产品。">Busca productos al instante.</p>
+      </div>
+
+      <input id="searchInput" class="search-box" type="text" placeholder="Buscar productos..." />
+      <div id="productGrid" class="product-grid"></div>
+    </section>
+
+    <section id="favorites" class="section favorites-section">
+      <div class="section-title">
+        <h2 data-es="Favoritos" data-zh="收藏">Favoritos</h2>
+        <p
+          data-es="Guarda productos para verlos después."
+          data-zh="保存产品，稍后查看。">
+          Guarda productos para verlos después.
+        </p>
+      </div>
+
+      <div id="favoriteGrid" class="product-grid"></div>
+    </section>
+
+    <section id="order-status" class="section order-status-section">
+      <div class="section-title">
+        <h2 data-es="Consultar pedido" data-zh="查询订单">Consultar pedido</h2>
+        <p
+          data-es="Ingresa tu nombre y teléfono para ver el estado."
+          data-zh="输入姓名和电话查看状态。">
+          Ingresa tu nombre y teléfono para ver el estado.
+        </p>
+      </div>
+
+      <div class="order-status-box">
+        <input id="statusName" type="text" placeholder="Nombre cliente">
+        <input id="statusPhone" type="tel" placeholder="Teléfono">
+        <button id="checkStatusBtn" class="main-btn" data-es="Consultar estado" data-zh="查询状态">
+          Consultar estado
+        </button>
+        <div id="statusResult" class="status-result hidden"></div>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact-section">
+      <div class="section-title">
+        <h2 data-es="Contacto" data-zh="联系我们">Contacto</h2>
+      </div>
+
+      <div class="contact-box">
+
+    <h3>📞 Contáctanos</h3>
+
+    <p>
+        <strong>💬 WhatsApp:</strong><br>
+        <a href="https://wa.me/50671776487" target="_blank">
+            +506 7177-6487
+        </a>
+    </p>
+
+    <p>
+        <strong>📍 Dirección:</strong><br>
+        Del Parque Morazán 25 metros oeste
+    </p>
+
+    <p>
+    <strong>🕒 Horario:</strong><br>
+    Lunes a Sábado<br>
+    9:00 AM – 6:00 PM<br><br>
+
+    Domingo<br>
+    10:00 AM – 3:00 PM
+</p>
+
+</div>
+    </section>
+
+  <aside id="cartPanel" class="cart-panel hidden">
+    <div class="cart-box">
+      <button id="closeCart" class="close-btn">×</button>
+      <h2 data-es="Carrito" data-zh="购物车">Carrito</h2>
+      <div id="cartItems"></div>
+      <h3>Total: ₡<span id="cartTotal">0</span></h3>
+
+      <div class="checkout-box">
+
+    <div class="checkout-header">
+        <h2>IMPORTADORA MORAZÁN</h2>
+
+        <h3 data-es="Finalizar pedido" data-zh="完成订单">
+            Finalizar pedido
+        </h3>
+
+        <p
+            data-es="Gracias por comprar en IMPORTADORA MORAZÁN. Completa tus datos para preparar tu pedido y contactarte por WhatsApp."
+            data-zh="感谢您选择 IMPORTADORA MORAZÁN。请填写以下信息，我们将准备您的订单并通过 WhatsApp 与您联系。">
+
+            Gracias por comprar en IMPORTADORA MORAZÁN.
+            Completa tus datos para preparar tu pedido y contactarte por WhatsApp.
+
+        </p>
+
+    </div>
+
+    <input id="customerName" placeholder="Nombre completo">
+
+    <input id="customerPhone" placeholder="Teléfono">
+
+    <textarea id="customerAddress"
+        placeholder="Dirección"></textarea>
+
+    <input id="customerNote" placeholder="Nota(opcional)">
+
+    <p
+        class="confirm-order-text"
+        data-es="¿Confirmar y enviar pedido?"
+        data-zh="确认提交订单?">
+        ¿Confirmar y enviar pedido? 
+    </p>
+
+    <button
+        id="checkoutBtn"
+        class="main-btn"
+        data-es="Hacer pedido"
+        data-zh="下订单">
+
+        Hacer pedido
+
+    </button>
+
+</div>
+    </div>
+  </aside>
+  </main>
+
+  <a class="floating-whatsapp" href="https://wa.me/50671776487" target="_blank">💬</a>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
