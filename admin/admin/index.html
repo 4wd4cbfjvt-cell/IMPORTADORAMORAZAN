@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - IMPORTADORA MORAZÁN</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1>IMPORTADORA MORAZÁN</h1>
+      <h2>Admin</h2>
+
+      <input id="username" placeholder="Usuario">
+      <input id="password" type="password" placeholder="Contraseña">
+
+      <button onclick="login()">Entrar</button>
+
+    </div>
+  </div>
+
+  <main id="adminApp" class="hidden">
+
+    <aside class="sidebar">
+      <h2>Panel Admin</h2>
+
+      <button onclick="showTab('products')">📦 Productos</button>
+      <button onclick="logout()">🚪 Salir</button>
+    </aside>
+
+    <section class="content">
+
+      <div id="productsTab">
+        <div class="topbar">
+          <div>
+            <h1>Productos</h1>
+            <p>Agrega, edita o elimina productos de la tienda.</p>
+            <p id="autosaveStatus" class="autosave-status">Guardado automático activado.</p>
+          </div>
+
+          <div class="topbar-actions">
+            <button type="button" class="secondary-btn" onclick="exportProducts()">Descargar respaldo</button>
+            <button type="button" class="secondary-btn" onclick="document.getElementById('catalogImport').click()">Importar catálogo</button>
+            <input id="catalogImport" class="file-input-hidden" type="file" accept="application/json,.json" onchange="importProducts(event)">
+            <button type="button" onclick="openProductForm()">+ Agregar producto</button>
+          </div>
+        </div>
+
+        <div id="productList"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <div id="productFormModal" class="modal hidden">
+    <div class="modal-card">
+
+      <button class="close" onclick="closeProductForm()">×</button>
+
+      <h2 id="formTitle">Agregar producto</h2>
+
+      <input id="productId" type="hidden">
+
+      <label>Nombre en español</label>
+      <input id="nameEs" placeholder="Ej: Mochila negra">
+
+      <label>Nombre en chino</label>
+      <input id="nameZh" placeholder="Ej: 黑色背包">
+
+      <label>Precio</label>
+      <input id="price" type="number" placeholder="Ej: 12000">
+
+      <label>Tamaño</label>
+      <input id="size" placeholder="Ej: 40 cm">
+
+      <label>Categoría</label>
+      <select id="category">
+        <option value="bags">Mochilas</option>
+        <option value="purses">Carteras</option>
+        <option value="socks">Medias</option>
+        <option value="shoes">Calzado</option>
+        <option value="perfume">Perfume</option>
+        <option value="men">Artículo Hombre</option>
+        <option value="rain">Artículos lluvia</option>
+        <option value="thermos">Termos</option>
+        <option value="stuffed">Peluches</option>
+        <option value="toys">Juguetes</option>
+        <option value="baby">Productos para bebé</option>
+        <option value="blankets">Cobijas</option>
+        <option value="pajamas">Pijamas</option>
+        <option value="rugs">Alfombras</option>
+      </select>
+      
+
+      <label>Imágenes del producto</label>
+      <div id="imageDropZone" class="image-drop-zone">
+        <strong>Arrastra las fotos aquí</strong>
+        <span>o haz clic para seleccionar imágenes</span>
+      </div>
+      <input id="imageUpload" class="file-input-hidden" type="file" accept="image/*" multiple>
+      <div id="imagePreviewList" class="image-preview-list"></div>
+
+      <button class="save-btn" onclick="saveProduct()">Guardar producto</button>
+
+    </div>
+  </div>
+
+  <script src="../js/admin.js"></script>
+</body>
+</html>
