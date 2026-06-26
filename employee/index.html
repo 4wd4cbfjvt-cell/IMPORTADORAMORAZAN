@@ -4,31 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Empleados - IMPORTADORA MORAZÁN</title>
-  <link rel="stylesheet" href="../css/employee.css">
+  <link rel="stylesheet" href="../css/employee.css?v=3">
 </head>
 <body>
-  <header class="employee-header">
-    <div>
-      <h1>Pedidos</h1>
-      <p>Panel para alistar productos de cada pedido.</p>
-    </div>
+  <div id="employeeLoginScreen" class="login-screen">
+    <form class="login-card" onsubmit="employeeLogin(event)">
+      <h1>IMPORTADORA MORAZÁN</h1>
+      <h2>Empleados</h2>
 
-    <div class="header-actions">
-      <button id="refreshBtn">Actualizar</button>
-      <a href="../index.html">Tienda</a>
-    </div>
-  </header>
+      <input id="employeeUsername" placeholder="Usuario" autocomplete="username">
+      <input id="employeePassword" type="password" placeholder="Contraseña" autocomplete="current-password">
 
-  <main class="employee-layout">
-    <section class="filters">
-      <button class="filter-btn active" data-filter="pending">Pendientes</button>
-      <button class="filter-btn" data-filter="ready">Alistados</button>
-      <button class="filter-btn" data-filter="all">Todos</button>
-    </section>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
 
-    <section id="employeeOrders" class="orders-list"></section>
-  </main>
+  <div id="employeeApp" class="hidden" hidden>
+    <header class="employee-header">
+      <div>
+        <h1>Pedidos</h1>
+        <p>Panel para alistar productos de cada pedido.</p>
+      </div>
 
-  <script src="../js/employee.js"></script>
+      <div class="header-actions">
+        <button id="refreshBtn">Actualizar</button>
+        <button type="button" class="logout-btn" onclick="employeeLogout()">Salir</button>
+        <a href="../index.html">Tienda</a>
+      </div>
+    </header>
+
+    <main class="employee-layout">
+      <section class="filters">
+        <button class="filter-btn active" data-filter="pending">Pendientes</button>
+        <button class="filter-btn" data-filter="ready">Alistados</button>
+        <button class="filter-btn" data-filter="all">Todos</button>
+      </section>
+
+      <section id="employeeOrders" class="orders-list"></section>
+    </main>
+  </div>
+
+  <script src="../js/employee.js?v=3"></script>
 </body>
 </html>
