@@ -34,6 +34,7 @@ function showEmployeeApp() {
   sessionStorage.setItem(EMPLOYEE_SESSION_KEY, String(Date.now() + EMPLOYEE_SESSION_MS));
   employeeLoginScreen.classList.add("hidden");
   employeeApp.classList.remove("hidden");
+  employeeApp.hidden = false;
   refreshData();
 }
 
@@ -205,4 +206,5 @@ if (isEmployeeLoggedIn()) {
 } else {
   employeeLoginScreen.classList.remove("hidden");
   employeeApp.classList.add("hidden");
+  employeeApp.hidden = true;
 }
