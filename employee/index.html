@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empleados - IMPORTADORA MORAZÁN</title>
+  <link rel="stylesheet" href="../css/employee.css">
+</head>
+<body>
+  <header class="employee-header">
+    <div>
+      <h1>Pedidos</h1>
+      <p>Panel para alistar productos de cada pedido.</p>
+    </div>
+
+    <div class="header-actions">
+      <button id="refreshBtn">Actualizar</button>
+      <a href="../index.html">Tienda</a>
+    </div>
+  </header>
+
+  <main class="employee-layout">
+    <section class="filters">
+      <button class="filter-btn active" data-filter="pending">Pendientes</button>
+      <button class="filter-btn" data-filter="ready">Alistados</button>
+      <button class="filter-btn" data-filter="all">Todos</button>
+    </section>
+
+    <section id="employeeOrders" class="orders-list"></section>
+  </main>
+
+  <script src="../js/employee.js"></script>
+</body>
+</html>
