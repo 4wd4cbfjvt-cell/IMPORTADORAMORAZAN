@@ -1610,16 +1610,27 @@ async function writeServerCatalog(customProducts, deletedIds) {
   return response.json();
 }
 
+function isLocalFileMode() {
+  return window.location.protocol === "file:";
+}
+
 async function loginToServer(username, password) {
   try {
-    await fetch("/api/login", {
+    const response = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify({ username, password })
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "No se pudo iniciar sesión en el servidor.");
+    }
   } catch (error) {
-    // Local file testing has no server API, so admin login should still work.
+    if (!isLocalFileMode()) {
+      throw error;
+    }
   }
 
   return true;
@@ -1634,7 +1645,7 @@ async function saveProductsData() {
     saveDeletedProductIds(new Set(serverCatalog.deletedIds || deletedIds));
     products = seedProducts(normalizeProducts(serverCatalog.customProducts || customProducts));
   } catch (error) {
-    if (error.status === 401) {
+    if (!isLocalFileMode() || error.status === 401) {
       throw error;
     }
 
@@ -1834,10 +1845,14 @@ async function login() {
   }
 
   if (user === ADMIN_USER && passwordHash === ADMIN_PASSWORD_HASH) {
-    await loginToServer(user, pass);
-    localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
-    localStorage.removeItem(ADMIN_LOCK_KEY);
-    showAdmin();
+    try {
+      await loginToServer(user, pass);
+      localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
+      localStorage.removeItem(ADMIN_LOCK_KEY);
+      showAdmin();
+    } catch (error) {
+      alert("No se pudo iniciar sesión en el servidor. Revisa la contraseña o intenta otra vez.");
+    }
   } else {
     recordFailedLogin();
   }
@@ -1864,6 +1879,7 @@ function categoryName(cat) {
     perfume: "Perfume",
     men: "Artículo Hombre",
     rain: "Artículos lluvia",
+    home: "Hogar",
     thermos: "Termos",
     stuffed: "Peluches",
     toys: "Juguetes",
@@ -2088,12 +2104,19 @@ async function saveProduct() {
 
     const oldProducts = products;
     applyProductToList(product, idValue);
+    closeProductForm();
+    renderProducts();
+    showAutosaveStatus("Guardando producto...");
 
     try {
       await saveProductsData();
       saveData();
+      uploadedImageFiles = [];
+      renderProducts();
+      showAutosaveStatus("Producto guardado automáticamente.");
     } catch (error) {
       products = oldProducts;
+      renderProducts();
 
       if (uploadedImageFiles.length && isStorageFullError(error)) {
         try {
@@ -2105,25 +2128,25 @@ async function saveProduct() {
 
           product = productFromForm(idValue, smallImages, oldProduct, nameEs, nameZh, price);
           applyProductToList(product, idValue);
+          renderProducts();
+          showAutosaveStatus("Guardando producto...");
           await saveProductsData();
           saveData();
+          uploadedImageFiles = [];
+          renderProducts();
           showAutosaveStatus("Producto guardado automáticamente.");
           alert("La foto era muy pesada, entonces la guardé más pequeña.");
         } catch (retryError) {
           products = oldProducts;
+          renderProducts();
           alert("Todavía no se pudo guardar. El navegador está lleno. Borra un producto viejo o usa una foto más pequeña.");
           return;
         }
       } else {
-        alert("No se pudo guardar el producto. Intenta otra vez.");
+        alert(error.message || "No se pudo guardar el producto. Intenta otra vez.");
         return;
       }
     }
-
-    uploadedImageFiles = [];
-    closeProductForm();
-    renderProducts();
-    showAutosaveStatus("Producto guardado automáticamente.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el producto.");
   } finally {
