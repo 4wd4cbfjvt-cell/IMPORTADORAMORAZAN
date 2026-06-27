@@ -1878,6 +1878,7 @@ function categoryName(cat) {
     shoes: "Calzado",
     perfume: "Perfume",
     men: "Artículo Hombre",
+    caps: "Gorra",
     rain: "Artículos lluvia",
     home: "Hogar",
     thermos: "Termos",
