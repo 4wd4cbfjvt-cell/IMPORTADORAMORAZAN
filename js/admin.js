@@ -1864,7 +1864,6 @@ function categoryName(cat) {
     perfume: "Perfume",
     men: "Artículo Hombre",
     rain: "Artículos lluvia",
-    home: "Hogar",
     thermos: "Termos",
     stuffed: "Peluches",
     toys: "Juguetes",
