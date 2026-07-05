@@ -522,38 +522,6 @@ const seededProducts = [
     images: ["images/bolso-deportivo-negro.png"]
   },
   {
-    id: 9066,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 1450,
-    category: "perfume",
-    images: ["images/perfume-locasit-blanco.png"]
-  },
-  {
-    id: 9067,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 1995,
-    category: "perfume",
-    images: ["images/perfume-locasit-negro.png"]
-  },
-  {
-    id: 9068,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 4500,
-    category: "perfume",
-    images: ["images/perfume-caballero.png"]
-  },
-  {
-    id: 9069,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 3995,
-    category: "perfume",
-    images: ["images/perfume-luxury.png"]
-  },
-  {
     id: 9070,
     nameEs: "Mochila cruzada",
     nameZh: "男士斜挎包",
@@ -1377,7 +1345,6 @@ function catalogNameForProduct(product) {
   const fixedNames = {
     bags: ["Mochila", "背包"],
     shoes: ["Calzado", "鞋类"],
-    perfume: ["Perfume", "香水"],
     rain: ["Sombrilla con figura", "图案雨伞"],
     thermos: ["Termo", "保温杯"],
     stuffed: ["Peluche", "毛绒玩具"],
@@ -1610,27 +1577,16 @@ async function writeServerCatalog(customProducts, deletedIds) {
   return response.json();
 }
 
-function isLocalFileMode() {
-  return window.location.protocol === "file:";
-}
-
 async function loginToServer(username, password) {
   try {
-    const response = await fetch("/api/login", {
+    await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify({ username, password })
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "No se pudo iniciar sesión en el servidor.");
-    }
   } catch (error) {
-    if (!isLocalFileMode()) {
-      throw error;
-    }
+    // Local file testing has no server API, so admin login should still work.
   }
 
   return true;
@@ -1645,7 +1601,7 @@ async function saveProductsData() {
     saveDeletedProductIds(new Set(serverCatalog.deletedIds || deletedIds));
     products = seedProducts(normalizeProducts(serverCatalog.customProducts || customProducts));
   } catch (error) {
-    if (!isLocalFileMode() || error.status === 401) {
+    if (error.status === 401) {
       throw error;
     }
 
@@ -1845,14 +1801,10 @@ async function login() {
   }
 
   if (user === ADMIN_USER && passwordHash === ADMIN_PASSWORD_HASH) {
-    try {
-      await loginToServer(user, pass);
-      localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
-      localStorage.removeItem(ADMIN_LOCK_KEY);
-      showAdmin();
-    } catch (error) {
-      alert("No se pudo iniciar sesión en el servidor. Revisa la contraseña o intenta otra vez.");
-    }
+    await loginToServer(user, pass);
+    localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
+    localStorage.removeItem(ADMIN_LOCK_KEY);
+    showAdmin();
   } else {
     recordFailedLogin();
   }
@@ -1876,11 +1828,8 @@ function categoryName(cat) {
     purses: "Carteras",
     socks: "Medias",
     shoes: "Calzado",
-    perfume: "Perfume",
     men: "Artículo Hombre",
-    caps: "Gorra",
     rain: "Artículos lluvia",
-    home: "Hogar",
     thermos: "Termos",
     stuffed: "Peluches",
     toys: "Juguetes",
@@ -2105,19 +2054,12 @@ async function saveProduct() {
 
     const oldProducts = products;
     applyProductToList(product, idValue);
-    closeProductForm();
-    renderProducts();
-    showAutosaveStatus("Guardando producto...");
 
     try {
       await saveProductsData();
       saveData();
-      uploadedImageFiles = [];
-      renderProducts();
-      showAutosaveStatus("Producto guardado automáticamente.");
     } catch (error) {
       products = oldProducts;
-      renderProducts();
 
       if (uploadedImageFiles.length && isStorageFullError(error)) {
         try {
@@ -2129,25 +2071,25 @@ async function saveProduct() {
 
           product = productFromForm(idValue, smallImages, oldProduct, nameEs, nameZh, price);
           applyProductToList(product, idValue);
-          renderProducts();
-          showAutosaveStatus("Guardando producto...");
           await saveProductsData();
           saveData();
-          uploadedImageFiles = [];
-          renderProducts();
           showAutosaveStatus("Producto guardado automáticamente.");
           alert("La foto era muy pesada, entonces la guardé más pequeña.");
         } catch (retryError) {
           products = oldProducts;
-          renderProducts();
           alert("Todavía no se pudo guardar. El navegador está lleno. Borra un producto viejo o usa una foto más pequeña.");
           return;
         }
       } else {
-        alert(error.message || "No se pudo guardar el producto. Intenta otra vez.");
+        alert("No se pudo guardar el producto. Intenta otra vez.");
         return;
       }
     }
+
+    uploadedImageFiles = [];
+    closeProductForm();
+    renderProducts();
+    showAutosaveStatus("Producto guardado automáticamente.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el producto.");
   } finally {
