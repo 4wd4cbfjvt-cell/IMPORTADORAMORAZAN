@@ -572,38 +572,6 @@ const seededProducts = [
     images: ["images/bolso-deportivo-negro.png"]
   },
   {
-    id: 9066,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 1450,
-    category: "perfume",
-    images: ["images/perfume-locasit-blanco.png"]
-  },
-  {
-    id: 9067,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 1995,
-    category: "perfume",
-    images: ["images/perfume-locasit-negro.png"]
-  },
-  {
-    id: 9068,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 4500,
-    category: "perfume",
-    images: ["images/perfume-caballero.png"]
-  },
-  {
-    id: 9069,
-    nameEs: "Perfume",
-    nameZh: "香水",
-    price: 3995,
-    category: "perfume",
-    images: ["images/perfume-luxury.png"]
-  },
-  {
     id: 9070,
     nameEs: "Mochila cruzada",
     nameZh: "男士斜挎包",
@@ -1322,7 +1290,7 @@ const seededProducts = [
     nameZh: "保温杯",
     price: 2900,
     size: "25 cm alto",
-    category: "thermos",
+    category: "termos",
     images: ["images/termo-agarradera.png"]
   },
   {
@@ -1331,7 +1299,7 @@ const seededProducts = [
     nameZh: "保温杯",
     price: 2500,
     size: "710 ml, térmico",
-    category: "thermos",
+    category: "termos",
     images: ["images/vaso-termico-tapa.png"]
   },
   {
@@ -1340,7 +1308,7 @@ const seededProducts = [
     nameZh: "保温杯",
     price: 2950,
     size: "900 ml",
-    category: "thermos",
+    category: "termos",
     images: ["images/termo-degradado-agarradera.png"]
   }
 ];
@@ -1425,9 +1393,8 @@ function catalogNameForProduct(product) {
   const fixedNames = {
     bags: ["Mochila", "背包"],
     shoes: ["Calzado", "鞋类"],
-    perfume: ["Perfume", "香水"],
     rain: ["Sombrilla con figura", "图案雨伞"],
-    thermos: ["Termo", "保温杯"],
+    termos: ["Termo", "保温杯"],
     stuffed: ["Peluche", "毛绒玩具"],
     baby: ["Juguete bebé", "婴儿玩具"],
     blankets: ["Cobija", "毯子"],
