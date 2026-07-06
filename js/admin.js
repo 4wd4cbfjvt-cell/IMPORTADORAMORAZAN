@@ -1240,7 +1240,7 @@ const seededProducts = [
     nameZh: "保温杯",
     price: 2900,
     size: "25 cm alto",
-    category: "thermos",
+    category: "termos",
     images: ["images/termo-agarradera.png"]
   },
   {
@@ -1249,7 +1249,7 @@ const seededProducts = [
     nameZh: "保温杯",
     price: 2500,
     size: "710 ml, térmico",
-    category: "thermos",
+    category: "termos",
     images: ["images/vaso-termico-tapa.png"]
   },
   {
@@ -1258,7 +1258,7 @@ const seededProducts = [
     nameZh: "保温杯",
     price: 2950,
     size: "900 ml",
-    category: "thermos",
+    category: "termos",
     images: ["images/termo-degradado-agarradera.png"]
   }
 ];
@@ -1346,7 +1346,7 @@ function catalogNameForProduct(product) {
     bags: ["Mochila", "背包"],
     shoes: ["Calzado", "鞋类"],
     rain: ["Sombrilla con figura", "图案雨伞"],
-    thermos: ["Termo", "保温杯"],
+    termos: ["Termo", "保温杯"],
     stuffed: ["Peluche", "毛绒玩具"],
     baby: ["Juguete bebé", "婴儿玩具"],
     blankets: ["Cobija", "毯子"],
@@ -1830,7 +1830,7 @@ function categoryName(cat) {
     shoes: "Calzado",
     men: "Artículo Hombre",
     rain: "Artículos lluvia",
-    thermos: "Termos",
+    termos: "Termos",
     stuffed: "Peluches",
     toys: "Juguetes",
     baby: "Productos para bebé",
