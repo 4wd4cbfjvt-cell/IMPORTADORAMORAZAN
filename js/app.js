@@ -1394,6 +1394,7 @@ function catalogNameForProduct(product) {
     bags: ["Mochila", "背包"],
     shoes: ["Calzado", "鞋类"],
     rain: ["Sombrilla con figura", "图案雨伞"],
+    home: ["Hogar", "家居"],
     termos: ["Termo", "保温杯"],
     stuffed: ["Peluche", "毛绒玩具"],
     baby: ["Juguete bebé", "婴儿玩具"],
