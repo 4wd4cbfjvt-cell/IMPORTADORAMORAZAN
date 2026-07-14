@@ -1610,13 +1610,40 @@ async function readServerCatalog() {
   }
 }
 
+function mergeProductLists(...productLists) {
+  const mergedProducts = new Map();
+
+  productLists.flat().forEach(product => {
+    if (product && product.id) {
+      mergedProducts.set(Number(product.id), product);
+    }
+  });
+
+  return [...mergedProducts.values()];
+}
+
 async function loadSavedProducts() {
   try {
     const serverCatalog = await readServerCatalog();
 
     if (serverCatalog) {
-      localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify(serverCatalog.deletedIds || []));
-      products = seedProducts(normalizeProducts(serverCatalog.customProducts || []));
+      let savedProducts = [];
+
+      try {
+        savedProducts = await readProductDatabase();
+      } catch (error) {
+        console.warn("No se pudo cargar IndexedDB.", error);
+      }
+
+      const deletedIds = new Set([
+        ...(serverCatalog.deletedIds || []),
+        ...deletedProductIds()
+      ]);
+      localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify([...deletedIds]));
+      products = seedProducts(normalizeProducts(mergeProductLists(
+        serverCatalog.customProducts || [],
+        savedProducts
+      )));
       localStorage.removeItem(LEGACY_PRODUCTS_KEY);
       localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
       applyLanguage();
