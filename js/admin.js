@@ -1662,6 +1662,13 @@ async function loadSavedProducts() {
 
     if (serverCatalog) {
       let savedProducts = [];
+      let legacyProducts = [];
+
+      try {
+        legacyProducts = storedProducts();
+      } catch (error) {
+        legacyProducts = [];
+      }
 
       try {
         savedProducts = await readProductDatabase();
@@ -1676,6 +1683,7 @@ async function loadSavedProducts() {
       saveDeletedProductIds(deletedIds);
       products = seedProducts(normalizeProducts(mergeProductLists(
         serverCatalog.customProducts || [],
+        legacyProducts,
         savedProducts
       )));
       localStorage.removeItem(LEGACY_PRODUCTS_KEY);
