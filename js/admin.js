@@ -1331,6 +1331,7 @@ let orders = JSON.parse(localStorage.getItem("im_orders")) || [];
 let uploadedImageFiles = [];
 let isSavingProduct = false;
 let serverApiAvailable = false;
+let serverSyncTimer = null;
 
 const ADMIN_USER = "admin";
 const ADMIN_PASSWORD = "morazan123";
@@ -1563,7 +1564,9 @@ function disableServerApi() {
 }
 
 async function serverApiFetch(path, options = {}) {
-  if (!serverApiAvailable) {
+  const { allowWhenUnavailable = false, ...fetchOptions } = options;
+
+  if (!serverApiAvailable && !allowWhenUnavailable) {
     const error = new Error("No hay API de servidor disponible.");
     error.localOnly = true;
     throw error;
@@ -1574,7 +1577,7 @@ async function serverApiFetch(path, options = {}) {
 
   try {
     return await fetch(path, {
-      ...options,
+      ...fetchOptions,
       signal: controller.signal
     });
   } catch (error) {
@@ -1588,18 +1591,21 @@ async function serverApiFetch(path, options = {}) {
 }
 
 async function readServerCatalog() {
-  try {
-    const apiResponse = await fetch(`/api/catalog?v=${Date.now()}`, {
-      cache: "no-store",
-      credentials: "same-origin"
-    });
+  if (!isStaticHosting()) {
+    try {
+      const apiResponse = await serverApiFetch(`/api/catalog?v=${Date.now()}`, {
+        cache: "no-store",
+        credentials: "same-origin",
+        allowWhenUnavailable: true
+      });
 
-    if (apiResponse.ok) {
-      serverApiAvailable = true;
-      return await apiResponse.json();
+      if (apiResponse.ok) {
+        serverApiAvailable = true;
+        return await apiResponse.json();
+      }
+    } catch (error) {
+      disableServerApi();
     }
-  } catch (error) {
-    disableServerApi();
   }
 
   try {
@@ -1673,13 +1679,23 @@ async function syncServerCatalogInBackground() {
   }
 }
 
+function scheduleServerCatalogSync() {
+  if (!serverApiAvailable) return;
+
+  clearTimeout(serverSyncTimer);
+  serverSyncTimer = setTimeout(() => {
+    syncServerCatalogInBackground();
+  }, 100);
+}
+
 async function loginToServer(username, password) {
   try {
-    const response = await fetch("/api/login", {
+    const response = await serverApiFetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password }),
+      allowWhenUnavailable: true
     });
 
     serverApiAvailable = response.ok;
@@ -1694,7 +1710,7 @@ async function saveProductsData() {
   const customProducts = customProductsForStorage();
   await writeProductDatabase(customProducts);
 
-  syncServerCatalogInBackground();
+  scheduleServerCatalogSync();
 
   localStorage.removeItem(LEGACY_PRODUCTS_KEY);
   localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
@@ -1920,10 +1936,10 @@ async function login() {
   }
 
   if (user === ADMIN_USER && passwordMatches) {
-    await loginToServer(user, pass);
     localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
     localStorage.removeItem(ADMIN_LOCK_KEY);
     showAdmin();
+    loginToServer(user, pass);
     return;
   }
 
@@ -1985,7 +2001,7 @@ function renderProducts() {
     return;
   }
 
-  products.forEach(product => {
+  list.innerHTML = products.map(product => {
     const size = productSize(product);
     const productMeta = [
       categoryName(product.category),
@@ -1993,7 +2009,7 @@ function renderProducts() {
       `₡${Number(product.price).toLocaleString("es-CR")}`
     ].filter(Boolean).join(" · ");
 
-    list.innerHTML += `
+    return `
       <div class="product-card">
         <img src="${adminImageSrc(product.images[0]) || ""}" alt="${product.nameEs}" loading="lazy" decoding="async">
         <div>
@@ -2006,7 +2022,7 @@ function renderProducts() {
         </div>
       </div>
     `;
-  });
+  }).join("");
 }
 
 function openProductForm() {
@@ -2181,12 +2197,19 @@ async function saveProduct() {
 
     const oldProducts = products;
     applyProductToList(product, idValue);
+    closeProductForm();
+    renderProducts();
+    showAutosaveStatus("Guardando producto...");
 
     try {
       await saveProductsData();
       saveData();
+      uploadedImageFiles = [];
+      renderProducts();
+      showAutosaveStatus("Producto guardado automáticamente.");
     } catch (error) {
       products = oldProducts;
+      renderProducts();
 
       if (uploadedImageFiles.length && isStorageFullError(error)) {
         try {
@@ -2198,25 +2221,25 @@ async function saveProduct() {
 
           product = productFromForm(idValue, smallImages, oldProduct, nameEs, nameZh, price);
           applyProductToList(product, idValue);
+          renderProducts();
+          showAutosaveStatus("Guardando producto...");
           await saveProductsData();
           saveData();
+          uploadedImageFiles = [];
+          renderProducts();
           showAutosaveStatus("Producto guardado automáticamente.");
           alert("La foto era muy pesada, entonces la guardé más pequeña.");
         } catch (retryError) {
           products = oldProducts;
+          renderProducts();
           alert("Todavía no se pudo guardar. El navegador está lleno. Borra un producto viejo o usa una foto más pequeña.");
           return;
         }
       } else {
-        alert("No se pudo guardar el producto. Intenta otra vez.");
+        alert(error.message || "No se pudo guardar el producto. Intenta otra vez.");
         return;
       }
     }
-
-    uploadedImageFiles = [];
-    closeProductForm();
-    renderProducts();
-    showAutosaveStatus("Producto guardado automáticamente.");
   } catch (error) {
     alert(error.message || "No se pudo guardar el producto.");
   } finally {
