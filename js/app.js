@@ -1770,7 +1770,7 @@ function showProducts() {
       <button class="favorite-btn ${isFavorite(product.id) ? "active" : ""}" onclick="event.stopPropagation(); toggleFavorite(${product.id})">
         ${isFavorite(product.id) ? "♥" : "♡"}
       </button>
-      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${product.id})">
+      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${product.id})" loading="lazy" decoding="async">
       <div class="product-info">
         <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
         ${productSizeHtml(product)}
@@ -1814,7 +1814,7 @@ function showFavorites() {
 
     card.innerHTML = `
       <button class="favorite-btn active" onclick="event.stopPropagation(); toggleFavorite(${product.id})">♥</button>
-      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${product.id})">
+      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${product.id})" loading="lazy" decoding="async">
       <div class="product-info">
         <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
         ${productSizeHtml(product)}
@@ -1957,7 +1957,7 @@ function updateCart() {
     cartItems.innerHTML += `
       <div class="cart-item">
         <div class="cart-row">
-          <img class="cart-item-img" src="${product.images[0] || ""}" alt="${productName(product)}">
+          <img class="cart-item-img" src="${product.images[0] || ""}" alt="${productName(product)}" loading="lazy" decoding="async">
           <div>
             <strong>${productName(product)}</strong>
             ${productSizeHtml(product)}
@@ -1986,7 +1986,7 @@ function openProduct(id) {
   modal.className = "modal";
   modal.id = "productModal";
 
-  const gallery = product.images.map(img => `<img src="${img}" onclick="document.getElementById('modalMainImg').src='${img}'">`).join("");
+  const gallery = product.images.map(img => `<img src="${img}" onclick="document.getElementById('modalMainImg').src='${img}'" loading="lazy" decoding="async">`).join("");
 
   modal.innerHTML = `
     <div class="modal-card">
@@ -1996,7 +1996,7 @@ function openProduct(id) {
       </button>
       <div class="modal-grid">
         <div>
-          <img id="modalMainImg" class="modal-main-img" src="${product.images[0]}" alt="${productName(product)}">
+          <img id="modalMainImg" class="modal-main-img" src="${product.images[0]}" alt="${productName(product)}" decoding="async">
           <div class="gallery">${gallery}</div>
         </div>
         <div>
