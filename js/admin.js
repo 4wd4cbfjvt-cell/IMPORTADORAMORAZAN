@@ -1319,9 +1319,10 @@ const PRODUCT_DB_NAME = "importadora_morazan_products";
 const PRODUCT_DB_VERSION = 1;
 const PRODUCT_STORE_NAME = "catalog";
 const PRODUCT_STORE_KEY = "custom_products";
+const SERVER_API_TIMEOUT_MS = 700;
 const MAX_UPLOAD_IMAGES = 2;
-const MAX_UPLOAD_IMAGE_SIDE = 720;
-const UPLOAD_IMAGE_QUALITY = 0.58;
+const MAX_UPLOAD_IMAGE_SIDE = 640;
+const UPLOAD_IMAGE_QUALITY = 0.52;
 const EMERGENCY_UPLOAD_IMAGE_SIDE = 420;
 const EMERGENCY_UPLOAD_IMAGE_QUALITY = 0.38;
 
@@ -1329,6 +1330,7 @@ let products = seedProducts(normalizeProducts(storedProducts()));
 let orders = JSON.parse(localStorage.getItem("im_orders")) || [];
 let uploadedImageFiles = [];
 let isSavingProduct = false;
+let serverApiAvailable = !isStaticHosting();
 
 const ADMIN_USER = "admin";
 const ADMIN_PASSWORD_HASH = "6677d8db9844a8f629b683b8eaaf7c1a71ed9614fe7909c8d4313e399df4b548";
@@ -1550,18 +1552,54 @@ async function writeProductDatabase(customProducts) {
   });
 }
 
+function isStaticHosting() {
+  const host = window.location.hostname;
+  return window.location.protocol === "file:" || !host || host.endsWith("github.io");
+}
+
+function disableServerApi() {
+  serverApiAvailable = false;
+}
+
+async function serverApiFetch(path, options = {}) {
+  if (!serverApiAvailable) {
+    const error = new Error("No hay API de servidor disponible.");
+    error.localOnly = true;
+    throw error;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SERVER_API_TIMEOUT_MS);
+
+  try {
+    return await fetch(path, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      disableServerApi();
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function readServerCatalog() {
   try {
-    const response = await fetch("/api/catalog", { cache: "no-store" });
+    const response = await serverApiFetch("/api/catalog", { cache: "no-store" });
+    if (response.status === 404) disableServerApi();
     if (!response.ok) return null;
     return await response.json();
   } catch (error) {
+    disableServerApi();
     return null;
   }
 }
 
 async function writeServerCatalog(customProducts, deletedIds) {
-  const response = await fetch("/api/catalog", {
+  const response = await serverApiFetch("/api/catalog", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "same-origin",
@@ -1572,6 +1610,7 @@ async function writeServerCatalog(customProducts, deletedIds) {
     const errorData = await response.json().catch(() => ({}));
     const error = new Error(errorData.error || "No se pudo guardar en el servidor.");
     error.status = response.status;
+    if (response.status !== 401) disableServerApi();
     throw error;
   }
 
@@ -1580,14 +1619,21 @@ async function writeServerCatalog(customProducts, deletedIds) {
 
 async function loginToServer(username, password) {
   try {
-    await fetch("/api/login", {
+    const response = await serverApiFetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
       body: JSON.stringify({ username, password })
     });
+
+    if (!response.ok && response.status !== 404) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "No se pudo iniciar sesión en el servidor.");
+    }
+
+    if (response.status === 404) disableServerApi();
   } catch (error) {
-    // Local file testing has no server API, so admin login should still work.
+    disableServerApi();
   }
 
   return true;
@@ -1606,6 +1652,7 @@ async function saveProductsData() {
       throw error;
     }
 
+    disableServerApi();
     await writeProductDatabase(customProducts);
   }
 
@@ -1870,7 +1917,7 @@ function renderProducts() {
 
     list.innerHTML += `
       <div class="product-card">
-        <img src="${adminImageSrc(product.images[0]) || ""}" alt="${product.nameEs}">
+        <img src="${adminImageSrc(product.images[0]) || ""}" alt="${product.nameEs}" loading="lazy" decoding="async">
         <div>
           <h3>${product.nameEs}</h3>
           <p>${productMeta}</p>
