@@ -149,10 +149,16 @@ async function saveDataUrl(dataUrl) {
         ? ".gif"
         : ".jpg";
   const buffer = Buffer.from(match[2], "base64");
-  const fileName = `admin-${Date.now()}-${crypto.randomBytes(6).toString("hex")}${extension}`;
+  const hash = crypto.createHash("sha256").update(buffer).digest("hex").slice(0, 24);
+  const fileName = `admin-${hash}${extension}`;
   const filePath = path.join(UPLOAD_DIR, fileName);
 
-  await fsp.writeFile(filePath, buffer);
+  try {
+    await fsp.access(filePath, fs.constants.F_OK);
+  } catch (error) {
+    await fsp.writeFile(filePath, buffer);
+  }
+
   return `images/uploads/${fileName}`;
 }
 
