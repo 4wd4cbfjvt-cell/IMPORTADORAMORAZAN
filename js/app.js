@@ -1596,6 +1596,18 @@ async function writeProductDatabase(customProducts) {
 
 async function readServerCatalog() {
   try {
+    const apiResponse = await fetch(`/api/catalog?v=${Date.now()}`, {
+      cache: "no-store",
+      credentials: "same-origin"
+    });
+
+    if (apiResponse.ok) {
+      return await apiResponse.json();
+    }
+  } catch (error) {
+  }
+
+  try {
     const response = await fetch(`catalog.json?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return null;
     const catalog = await response.json();
@@ -1652,8 +1664,13 @@ async function loadSavedProducts() {
         legacyProducts,
         savedProducts
       )));
-      localStorage.removeItem(LEGACY_PRODUCTS_KEY);
-      localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
+      try {
+        await writeProductDatabase(customProductsForStorage());
+        localStorage.removeItem(LEGACY_PRODUCTS_KEY);
+        localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
+      } catch (error) {
+        console.warn("No se pudo preservar productos recuperados.", error);
+      }
       applyLanguage();
       return;
     }
