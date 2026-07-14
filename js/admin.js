@@ -1603,6 +1603,18 @@ async function readServerCatalog() {
   }
 }
 
+function mergeProductLists(...productLists) {
+  const mergedProducts = new Map();
+
+  productLists.flat().forEach(product => {
+    if (product && product.id) {
+      mergedProducts.set(Number(product.id), product);
+    }
+  });
+
+  return [...mergedProducts.values()];
+}
+
 async function writeServerCatalog(customProducts, deletedIds) {
   const response = await serverApiFetch("/api/catalog", {
     method: "PUT",
@@ -1649,8 +1661,23 @@ async function loadSavedProducts() {
     const serverCatalog = await readServerCatalog();
 
     if (serverCatalog) {
-      saveDeletedProductIds(new Set(serverCatalog.deletedIds || []));
-      products = seedProducts(normalizeProducts(serverCatalog.customProducts || []));
+      let savedProducts = [];
+
+      try {
+        savedProducts = await readProductDatabase();
+      } catch (error) {
+        console.warn("No se pudo cargar IndexedDB.", error);
+      }
+
+      const deletedIds = new Set([
+        ...(serverCatalog.deletedIds || []),
+        ...deletedProductIds()
+      ]);
+      saveDeletedProductIds(deletedIds);
+      products = seedProducts(normalizeProducts(mergeProductLists(
+        serverCatalog.customProducts || [],
+        savedProducts
+      )));
       localStorage.removeItem(LEGACY_PRODUCTS_KEY);
       localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
       return;
