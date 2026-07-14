@@ -1596,9 +1596,15 @@ async function writeProductDatabase(customProducts) {
 
 async function readServerCatalog() {
   try {
-    const response = await fetch("/api/catalog", { cache: "no-store" });
+    const response = await fetch(`catalog.json?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return null;
-    return await response.json();
+    const catalog = await response.json();
+
+    if (Array.isArray(catalog)) {
+      return { customProducts: catalog, deletedIds: [] };
+    }
+
+    return catalog;
   } catch (error) {
     return null;
   }
