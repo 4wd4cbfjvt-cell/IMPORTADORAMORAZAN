@@ -1648,6 +1648,31 @@ async function writeServerCatalog(customProducts, deletedIds) {
   return response.json();
 }
 
+async function syncServerCatalogInBackground() {
+  if (!serverApiAvailable) return;
+
+  try {
+    const serverCatalog = await writeServerCatalog(publishableProducts(), [...deletedProductIds()]);
+
+    if (Array.isArray(serverCatalog.customProducts)) {
+      products = seedProducts(normalizeProducts(serverCatalog.customProducts));
+      saveDeletedProductIds(new Set(serverCatalog.deletedIds || []));
+      await writeProductDatabase(customProductsForStorage());
+      renderProducts();
+      showAutosaveStatus("Servidor sincronizado.");
+    }
+  } catch (error) {
+    if (error.status !== 401) {
+      disableServerApi();
+      console.warn("No se pudo guardar en el servidor; se guardó localmente.", error);
+      showAutosaveStatus("Guardado local. Servidor no disponible.");
+      return;
+    }
+
+    showAutosaveStatus("Guardado local. Inicia sesión para sincronizar.");
+  }
+}
+
 async function loginToServer(username, password) {
   try {
     const response = await fetch("/api/login", {
@@ -1669,22 +1694,7 @@ async function saveProductsData() {
   const customProducts = customProductsForStorage();
   await writeProductDatabase(customProducts);
 
-  if (serverApiAvailable) {
-    try {
-      const serverCatalog = await writeServerCatalog(publishableProducts(), [...deletedProductIds()]);
-
-      if (Array.isArray(serverCatalog.customProducts)) {
-        products = seedProducts(normalizeProducts(serverCatalog.customProducts));
-        saveDeletedProductIds(new Set(serverCatalog.deletedIds || []));
-        await writeProductDatabase(customProductsForStorage());
-      }
-    } catch (error) {
-      if (error.status === 401) throw error;
-      disableServerApi();
-      console.warn("No se pudo guardar en el servidor; se guardó localmente.", error);
-      showAutosaveStatus("Guardado local. Servidor no disponible.");
-    }
-  }
+  syncServerCatalogInBackground();
 
   localStorage.removeItem(LEGACY_PRODUCTS_KEY);
   localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
