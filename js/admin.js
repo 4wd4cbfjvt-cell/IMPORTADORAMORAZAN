@@ -1319,7 +1319,7 @@ const PRODUCT_DB_NAME = "importadora_morazan_products";
 const PRODUCT_DB_VERSION = 1;
 const PRODUCT_STORE_NAME = "catalog";
 const PRODUCT_STORE_KEY = "custom_products";
-const SERVER_API_TIMEOUT_MS = 700;
+const SERVER_API_TIMEOUT_MS = 15000;
 const MAX_UPLOAD_IMAGES = 2;
 const MAX_UPLOAD_IMAGE_SIDE = 640;
 const UPLOAD_IMAGE_QUALITY = 0.52;
@@ -1589,6 +1589,20 @@ async function serverApiFetch(path, options = {}) {
 
 async function readServerCatalog() {
   try {
+    const apiResponse = await fetch(`/api/catalog?v=${Date.now()}`, {
+      cache: "no-store",
+      credentials: "same-origin"
+    });
+
+    if (apiResponse.ok) {
+      serverApiAvailable = true;
+      return await apiResponse.json();
+    }
+  } catch (error) {
+    disableServerApi();
+  }
+
+  try {
     const response = await fetch(`../catalog.json?v=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return null;
     const catalog = await response.json();
@@ -1635,12 +1649,29 @@ async function writeServerCatalog(customProducts, deletedIds) {
 }
 
 async function loginToServer(username, password) {
-  return true;
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ username, password })
+    });
+
+    serverApiAvailable = response.ok;
+    return response.ok;
+  } catch (error) {
+    disableServerApi();
+    return false;
+  }
 }
 
 async function saveProductsData() {
   const customProducts = customProductsForStorage();
   await writeProductDatabase(customProducts);
+
+  if (serverApiAvailable) {
+    await writeServerCatalog(publishableProducts(), [...deletedProductIds()]);
+  }
 
   localStorage.removeItem(LEGACY_PRODUCTS_KEY);
   localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
@@ -1686,8 +1717,13 @@ async function loadSavedProducts() {
         legacyProducts,
         savedProducts
       )));
-      localStorage.removeItem(LEGACY_PRODUCTS_KEY);
-      localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
+      try {
+        await writeProductDatabase(customProductsForStorage());
+        localStorage.removeItem(LEGACY_PRODUCTS_KEY);
+        localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
+      } catch (error) {
+        console.warn("No se pudo preservar productos recuperados.", error);
+      }
       return;
     }
 
