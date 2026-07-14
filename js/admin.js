@@ -1330,7 +1330,7 @@ let products = seedProducts(normalizeProducts(storedProducts()));
 let orders = JSON.parse(localStorage.getItem("im_orders")) || [];
 let uploadedImageFiles = [];
 let isSavingProduct = false;
-let serverApiAvailable = !isStaticHosting();
+let serverApiAvailable = false;
 
 const ADMIN_USER = "admin";
 const ADMIN_PASSWORD_HASH = "6677d8db9844a8f629b683b8eaaf7c1a71ed9614fe7909c8d4313e399df4b548";
@@ -1587,15 +1587,7 @@ async function serverApiFetch(path, options = {}) {
 }
 
 async function readServerCatalog() {
-  try {
-    const response = await serverApiFetch("/api/catalog", { cache: "no-store" });
-    if (response.status === 404) disableServerApi();
-    if (!response.ok) return null;
-    return await response.json();
-  } catch (error) {
-    disableServerApi();
-    return null;
-  }
+  return null;
 }
 
 async function writeServerCatalog(customProducts, deletedIds) {
@@ -1618,43 +1610,12 @@ async function writeServerCatalog(customProducts, deletedIds) {
 }
 
 async function loginToServer(username, password) {
-  try {
-    const response = await serverApiFetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ username, password })
-    });
-
-    if (!response.ok && response.status !== 404) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "No se pudo iniciar sesión en el servidor.");
-    }
-
-    if (response.status === 404) disableServerApi();
-  } catch (error) {
-    disableServerApi();
-  }
-
   return true;
 }
 
 async function saveProductsData() {
   const customProducts = customProductsForStorage();
-  const deletedIds = [...deletedProductIds()];
-
-  try {
-    const serverCatalog = await writeServerCatalog(customProducts, deletedIds);
-    saveDeletedProductIds(new Set(serverCatalog.deletedIds || deletedIds));
-    products = seedProducts(normalizeProducts(serverCatalog.customProducts || customProducts));
-  } catch (error) {
-    if (error.status === 401) {
-      throw error;
-    }
-
-    disableServerApi();
-    await writeProductDatabase(customProducts);
-  }
+  await writeProductDatabase(customProducts);
 
   localStorage.removeItem(LEGACY_PRODUCTS_KEY);
   localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
@@ -1800,8 +1761,8 @@ async function showAdmin() {
   localStorage.removeItem("im_admin_logged");
   document.getElementById("loginScreen").classList.add("hidden");
   document.getElementById("adminApp").classList.remove("hidden");
-  await loadSavedProducts();
   renderProducts();
+  loadSavedProducts().then(renderProducts);
 }
 
 function requireAdmin() {
