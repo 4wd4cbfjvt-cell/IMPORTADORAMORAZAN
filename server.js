@@ -8,6 +8,7 @@ const ROOT = __dirname;
 const STORAGE_DIR = process.env.STORAGE_DIR || ROOT;
 const DATA_DIR = path.join(STORAGE_DIR, "data");
 const DATA_FILE = path.join(DATA_DIR, "catalog.json");
+const STATIC_CATALOG_FILE = path.join(ROOT, "catalog.json");
 const UPLOAD_DIR = path.join(STORAGE_DIR, "uploads");
 const PORT = Number(process.env.PORT || 3000);
 
@@ -100,13 +101,39 @@ async function readCatalog() {
 
   try {
     const catalog = JSON.parse(text);
-    return {
+    const cleanCatalog = {
       customProducts: Array.isArray(catalog.customProducts) ? catalog.customProducts : [],
       deletedIds: Array.isArray(catalog.deletedIds) ? catalog.deletedIds : []
     };
+
+    if (!cleanCatalog.customProducts.length) {
+      return await readStaticCatalogFallback(cleanCatalog);
+    }
+
+    return cleanCatalog;
   } catch (error) {
-    return { customProducts: [], deletedIds: [] };
+    return await readStaticCatalogFallback({ customProducts: [], deletedIds: [] });
   }
+}
+
+async function readStaticCatalogFallback(defaultCatalog) {
+  try {
+    const text = await fsp.readFile(STATIC_CATALOG_FILE, "utf8");
+    const catalog = JSON.parse(text);
+    const customProducts = Array.isArray(catalog)
+      ? catalog
+      : Array.isArray(catalog.customProducts)
+        ? catalog.customProducts
+        : [];
+    const deletedIds = Array.isArray(catalog.deletedIds) ? catalog.deletedIds : defaultCatalog.deletedIds;
+
+    if (customProducts.length) {
+      return { customProducts, deletedIds };
+    }
+  } catch (error) {
+  }
+
+  return defaultCatalog;
 }
 
 async function saveDataUrl(dataUrl) {
