@@ -1319,7 +1319,7 @@ const PRODUCT_DB_NAME = "importadora_morazan_products";
 const PRODUCT_DB_VERSION = 1;
 const PRODUCT_STORE_NAME = "catalog";
 const PRODUCT_STORE_KEY = "custom_products";
-const SERVER_API_TIMEOUT_MS = 15000;
+const SERVER_API_TIMEOUT_MS = 6000;
 const MAX_UPLOAD_IMAGES = 2;
 const MAX_UPLOAD_IMAGE_SIDE = 640;
 const UPLOAD_IMAGE_QUALITY = 0.52;
@@ -1670,7 +1670,20 @@ async function saveProductsData() {
   await writeProductDatabase(customProducts);
 
   if (serverApiAvailable) {
-    await writeServerCatalog(publishableProducts(), [...deletedProductIds()]);
+    try {
+      const serverCatalog = await writeServerCatalog(publishableProducts(), [...deletedProductIds()]);
+
+      if (Array.isArray(serverCatalog.customProducts)) {
+        products = seedProducts(normalizeProducts(serverCatalog.customProducts));
+        saveDeletedProductIds(new Set(serverCatalog.deletedIds || []));
+        await writeProductDatabase(customProductsForStorage());
+      }
+    } catch (error) {
+      if (error.status === 401) throw error;
+      disableServerApi();
+      console.warn("No se pudo guardar en el servidor; se guardó localmente.", error);
+      showAutosaveStatus("Guardado local. Servidor no disponible.");
+    }
   }
 
   localStorage.removeItem(LEGACY_PRODUCTS_KEY);
