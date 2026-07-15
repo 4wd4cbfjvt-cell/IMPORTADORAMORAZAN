@@ -52,6 +52,76 @@ label {
   font-weight: 800;
 }
 
+.option-editor {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 10px;
+}
+
+.admin-option-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-option-circle {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #bbb;
+  border-radius: 50%;
+}
+
+.admin-option-input {
+  border: none;
+  border-bottom: 2px dotted #aaa;
+  border-radius: 0;
+  margin: 0;
+  padding: 9px 4px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.admin-option-input:focus {
+  outline: none;
+  border-bottom-color: #d60000;
+}
+
+.remove-option-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: #eee;
+  color: #111;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.add-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  color: #777;
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  margin: 2px 0 8px;
+  padding: 9px 0;
+  text-align: left;
+  font-size: 19px;
+}
+
+.add-option-btn::before {
+  content: "";
+  width: 30px;
+  height: 30px;
+  border: 3px solid #bbb;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
 button {
   border: none;
   background: #d60000;
