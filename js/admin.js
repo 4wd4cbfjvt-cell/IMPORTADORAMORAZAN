@@ -1491,6 +1491,7 @@ function productStorageSnapshot(product) {
     price: product.price,
     size: size || "",
     category: product.category,
+    options: product.options || [],
     images: product.images || []
   };
 }
@@ -2034,6 +2035,7 @@ function openProductForm() {
   document.getElementById("nameZh").value = "";
   document.getElementById("price").value = "";
   document.getElementById("size").value = "";
+  document.getElementById("options").value = "";
   document.getElementById("category").value = "bags";
   document.getElementById("imageUpload").value = "";
   uploadedImageFiles = [];
@@ -2139,6 +2141,11 @@ function setUploadFiles(files) {
 }
 
 function productFromForm(idValue, images, oldProduct, nameEs, nameZh, price) {
+  const options = document.getElementById("options").value
+    .split(/\r?\n|,/)
+    .map(option => option.trim())
+    .filter(Boolean);
+
   return {
     id: idValue ? Number(idValue) : Date.now(),
     nameEs,
@@ -2146,6 +2153,7 @@ function productFromForm(idValue, images, oldProduct, nameEs, nameZh, price) {
     price,
     size: document.getElementById("size").value.trim(),
     category: document.getElementById("category").value,
+    options,
     images: images.length ? images : oldProduct?.images || ["https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=900"]
   };
 }
@@ -2263,6 +2271,7 @@ function editProduct(id) {
   document.getElementById("nameZh").value = product.nameZh;
   document.getElementById("price").value = product.price;
   document.getElementById("size").value = productSize(product);
+  document.getElementById("options").value = (product.options || []).join("\n");
   document.getElementById("category").value = product.category;
   document.getElementById("imageUpload").value = "";
   uploadedImageFiles = [];
