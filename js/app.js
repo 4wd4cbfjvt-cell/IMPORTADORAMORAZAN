@@ -1693,22 +1693,43 @@ function productOptions(product) {
     : [];
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function productOptionsHtml(product) {
   const options = productOptions(product);
   return options.length
-    ? `<p class="product-options">${t("Opciones", "选项")}: ${options.join(" / ")}</p>`
+    ? `<p class="product-options">${t("Opciones", "选项")}: ${options.map(escapeHtml).join(" / ")}</p>`
     : "";
 }
 
-function productOptionSelectHtml(product) {
+function productOptionPickerHtml(product) {
   const options = productOptions(product);
   if (!options.length) return "";
 
   return `
-    <label class="option-label" for="productOptionSelect">${t("Elige una opción", "选择选项")}</label>
-    <select id="productOptionSelect" class="product-option-select">
-      ${options.map(option => `<option value="${option}">${option}</option>`).join("")}
-    </select>
+    <div class="option-picker" aria-label="${t("Elige una opción", "选择选项")}">
+      <p class="option-label">${t("Elige una opción", "选择选项")}</p>
+      ${options.map(option => `
+        <label class="option-choice">
+          <input type="radio" name="productOption" value="${escapeHtml(option)}">
+          <span class="option-circle"></span>
+          <span>${escapeHtml(option)}</span>
+        </label>
+      `).join("")}
+      <label class="option-choice option-other-choice">
+        <input type="radio" name="productOption" value="__other">
+        <span class="option-circle"></span>
+        <span>${t("Otro", "其他")}:</span>
+        <input id="productOptionOther" class="option-other-input" type="text" placeholder="${t("Escribe aquí", "在这里输入")}">
+      </label>
+    </div>
   `;
 }
 
@@ -1917,8 +1938,20 @@ function addToCart(id, button, quantity = 1, option = "") {
 }
 
 function addSelectedProductOption(id, button) {
-  const select = document.getElementById("productOptionSelect");
-  addToCart(id, button, 1, select ? select.value : "");
+  const selected = document.querySelector('input[name="productOption"]:checked');
+  let option = selected ? selected.value : "";
+
+  if (option === "__other") {
+    option = document.getElementById("productOptionOther")?.value.trim() || "";
+  }
+
+  if (!option) {
+    alert(t("Elige una opción o escribe otra.", "请选择一个选项或输入其他选项。"));
+    return false;
+  }
+
+  addToCart(id, button, 1, option);
+  return true;
 }
 
 function flyToCart(button) {
@@ -2067,9 +2100,9 @@ function openProduct(id) {
           <h2>${productName(product)}</h2>
           ${productSizeHtml(product)}
           ${productOptionsHtml(product)}
-          ${productOptionSelectHtml(product)}
+          ${productOptionPickerHtml(product)}
 <p class="price">₡${money(product.price)}</p>
-          <button class="main-btn" onclick="addSelectedProductOption(${product.id}, this); closeProduct(); document.getElementById('cartPanel').classList.remove('hidden');">
+          <button class="main-btn" onclick="if (addSelectedProductOption(${product.id}, this)) { closeProduct(); document.getElementById('cartPanel').classList.remove('hidden'); }">
             ${t("Agregar al carrito", "加入购物车")}
           </button>
         </div>
