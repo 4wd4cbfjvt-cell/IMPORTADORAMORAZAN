@@ -2035,7 +2035,7 @@ function openProductForm() {
   document.getElementById("nameZh").value = "";
   document.getElementById("price").value = "";
   document.getElementById("size").value = "";
-  document.getElementById("options").value = "";
+  setOptionFields([]);
   document.getElementById("category").value = "bags";
   document.getElementById("imageUpload").value = "";
   uploadedImageFiles = [];
@@ -2140,11 +2140,60 @@ function setUploadFiles(files) {
   renderImagePreviews(selectedFiles.map(file => URL.createObjectURL(file)));
 }
 
-function productFromForm(idValue, images, oldProduct, nameEs, nameZh, price) {
-  const options = document.getElementById("options").value
-    .split(/\r?\n|,/)
-    .map(option => option.trim())
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function optionFieldHtml(value = "") {
+  const inputValue = escapeAttribute(value);
+
+  return `
+    <div class="admin-option-row">
+      <span class="admin-option-circle"></span>
+      <input class="admin-option-input" type="text" value="${inputValue}" placeholder="Opción">
+      <button type="button" class="remove-option-btn" onclick="removeOptionField(this)" aria-label="Quitar opción">×</button>
+    </div>
+  `;
+}
+
+function setOptionFields(options = []) {
+  const optionEditor = document.getElementById("optionEditor");
+  if (!optionEditor) return;
+
+  optionEditor.innerHTML = (options.length ? options : [""])
+    .map(optionFieldHtml)
+    .join("");
+}
+
+function addOptionField(value = "") {
+  const optionEditor = document.getElementById("optionEditor");
+  if (!optionEditor) return;
+
+  optionEditor.insertAdjacentHTML("beforeend", optionFieldHtml(value));
+  optionEditor.querySelector(".admin-option-row:last-child .admin-option-input")?.focus();
+}
+
+function removeOptionField(button) {
+  button.closest(".admin-option-row")?.remove();
+
+  const optionEditor = document.getElementById("optionEditor");
+  if (optionEditor && !optionEditor.querySelector(".admin-option-row")) {
+    setOptionFields([]);
+  }
+}
+
+function formOptions() {
+  return Array.from(document.querySelectorAll(".admin-option-input"))
+    .map(input => input.value.trim())
     .filter(Boolean);
+}
+
+function productFromForm(idValue, images, oldProduct, nameEs, nameZh, price) {
+  const options = formOptions();
 
   return {
     id: idValue ? Number(idValue) : Date.now(),
@@ -2271,7 +2320,7 @@ function editProduct(id) {
   document.getElementById("nameZh").value = product.nameZh;
   document.getElementById("price").value = product.price;
   document.getElementById("size").value = productSize(product);
-  document.getElementById("options").value = (product.options || []).join("\n");
+  setOptionFields(product.options || []);
   document.getElementById("category").value = product.category;
   document.getElementById("imageUpload").value = "";
   uploadedImageFiles = [];
