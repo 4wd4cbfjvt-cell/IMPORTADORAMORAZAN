@@ -77,8 +77,9 @@
       <input id="size" placeholder="Ej: 40 cm">
 
       <label>Opciones</label>
-      <textarea id="options" placeholder="Ej:&#10;Rosado&#10;Rojo"></textarea>
-      <p class="hint">Escribe una opción por línea, por ejemplo colores o modelos.</p>
+      <div id="optionEditor" class="option-editor"></div>
+      <button type="button" class="add-option-btn" onclick="addOptionField()">Agregar opción</button>
+      <p class="hint">Agrega colores, modelos o nombres. Borra una opción vacía para quitarla.</p>
 
       <label>Categoría</label>
       <select id="category">
