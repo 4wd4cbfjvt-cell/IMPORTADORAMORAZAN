@@ -1370,7 +1370,7 @@ const PRODUCT_DB_VERSION = 1;
 const PRODUCT_STORE_NAME = "catalog";
 const PRODUCT_STORE_KEY = "custom_products";
 
-let products = seedProducts(normalizeProducts(storedProducts()));
+let products = seedProducts([]);
 let cart = JSON.parse(localStorage.getItem("im_cart")) || [];
 let orders = JSON.parse(localStorage.getItem("im_orders")) || [];
 let favorites = JSON.parse(localStorage.getItem("im_favorites")) || [];
@@ -1639,53 +1639,18 @@ async function loadSavedProducts() {
     const serverCatalog = await readServerCatalog();
 
     if (serverCatalog) {
-      let savedProducts = [];
-      let legacyProducts = [];
-
-      try {
-        legacyProducts = storedProducts();
-      } catch (error) {
-        legacyProducts = [];
-      }
-
-      try {
-        savedProducts = await readProductDatabase();
-      } catch (error) {
-        console.warn("No se pudo cargar IndexedDB.", error);
-      }
-
-      const deletedIds = new Set([
-        ...(serverCatalog.deletedIds || []),
-        ...deletedProductIds()
-      ]);
+      const deletedIds = new Set(serverCatalog.deletedIds || []);
       localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify([...deletedIds]));
-      products = seedProducts(normalizeProducts(mergeProductLists(
-        serverCatalog.customProducts || [],
-        legacyProducts,
-        savedProducts
-      )));
+      products = seedProducts(normalizeProducts(serverCatalog.customProducts || []));
       try {
         await writeProductDatabase(customProductsForStorage());
         localStorage.removeItem(LEGACY_PRODUCTS_KEY);
         localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
       } catch (error) {
-        console.warn("No se pudo preservar productos recuperados.", error);
+        console.warn("No se pudo actualizar el respaldo local de productos.", error);
       }
       applyLanguage();
       return;
-    }
-
-    const savedProducts = await readProductDatabase();
-
-    if (savedProducts.length) {
-      products = seedProducts(normalizeProducts(savedProducts));
-    } else {
-      const customProducts = customProductsForStorage();
-
-      if (customProducts.length) {
-        await writeProductDatabase(customProducts);
-        products = seedProducts(normalizeProducts(customProducts));
-      }
     }
 
     localStorage.removeItem(LEGACY_PRODUCTS_KEY);
@@ -1720,6 +1685,31 @@ function productSize(product) {
 function productSizeHtml(product) {
   const size = productSize(product);
   return size ? `<p class="product-size">${t("Tamaño", "尺寸")}: ${size}</p>` : "";
+}
+
+function productOptions(product) {
+  return Array.isArray(product.options)
+    ? product.options.map(option => String(option).trim()).filter(Boolean)
+    : [];
+}
+
+function productOptionsHtml(product) {
+  const options = productOptions(product);
+  return options.length
+    ? `<p class="product-options">${t("Opciones", "选项")}: ${options.join(" / ")}</p>`
+    : "";
+}
+
+function productOptionSelectHtml(product) {
+  const options = productOptions(product);
+  if (!options.length) return "";
+
+  return `
+    <label class="option-label" for="productOptionSelect">${t("Elige una opción", "选择选项")}</label>
+    <select id="productOptionSelect" class="product-option-select">
+      ${options.map(option => `<option value="${option}">${option}</option>`).join("")}
+    </select>
+  `;
 }
 
 function money(price) {
@@ -1832,8 +1822,9 @@ function showProducts() {
       <div class="product-info">
         <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
         ${productSizeHtml(product)}
+        ${productOptionsHtml(product)}
         <p class="price">₡${money(product.price)}</p>
-        <button onclick="addToCart(${product.id}, this)">
+        <button onclick="${productOptions(product).length ? `openProduct(${product.id})` : `addToCart(${product.id}, this)`}">
           ${t("Agregar al carrito", "加入购物车")}
         </button>
       </div>
@@ -1876,8 +1867,9 @@ function showFavorites() {
       <div class="product-info">
         <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
         ${productSizeHtml(product)}
+        ${productOptionsHtml(product)}
         <p class="price">₡${money(product.price)}</p>
-        <button onclick="addToCart(${product.id}, this)">
+        <button onclick="${productOptions(product).length ? `openProduct(${product.id})` : `addToCart(${product.id}, this)`}">
           ${t("Agregar al carrito", "加入购物车")}
         </button>
       </div>
@@ -1895,17 +1887,25 @@ function filterProducts(category) {
   showProducts();
 }
 
-function addToCart(id, button, quantity = 1) {
+function addToCart(id, button, quantity = 1, option = "") {
   const product = products.find(p => p.id === id);
   if (!product) return;
 
   const amount = Math.max(1, Number(quantity || 1));
-  const existing = cart.find(item => item.id === id);
+  const selectedOption = String(option || "").trim();
+  const options = productOptions(product);
+
+  if (options.length && !selectedOption) {
+    openProduct(id);
+    return;
+  }
+
+  const existing = cart.find(item => item.id === id && (item.option || "") === selectedOption);
 
   if (existing) {
     existing.quantity += amount;
   } else {
-    cart.push({ id, quantity: amount });
+    cart.push({ id, quantity: amount, option: selectedOption });
   }
 
   saveData();
@@ -1914,6 +1914,11 @@ function addToCart(id, button, quantity = 1) {
   if (button) {
     flyToCart(button);
   }
+}
+
+function addSelectedProductOption(id, button) {
+  const select = document.getElementById("productOptionSelect");
+  addToCart(id, button, 1, select ? select.value : "");
 }
 
 function flyToCart(button) {
@@ -1956,15 +1961,15 @@ function flyToCart(button) {
 }
 
 
-function changeQty(id, amount) {
-  const item = cart.find(i => i.id === id);
+function changeQty(id, amount, option = "") {
+  const item = cart.find(i => i.id === id && (i.option || "") === option);
   const product = products.find(p => p.id === id);
   if (!item || !product) return;
 
   item.quantity += amount;
 
   if (item.quantity <= 0) {
-    cart = cart.filter(i => i.id !== id);
+    cart = cart.filter(i => !(i.id === id && (i.option || "") === option));
   }
 
 
@@ -1972,8 +1977,8 @@ function changeQty(id, amount) {
   updateCart();
 }
 
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
+function removeFromCart(id, option = "") {
+  cart = cart.filter(i => !(i.id === id && (i.option || "") === option));
   saveData();
   updateCart();
 }
@@ -2019,14 +2024,15 @@ function updateCart() {
           <div>
             <strong>${productName(product)}</strong>
             ${productSizeHtml(product)}
+            ${item.option ? `<p class="product-option-line">${t("Opción", "选项")}: ${item.option}</p>` : ""}
             <p>₡${money(product.price)}</p>
             <p class="item-total">${t("Total de este producto", "此产品总计")}: ₡${money(itemTotal)}</p>
-            <button class="remove-btn" onclick="removeFromCart(${product.id})">${t("Quitar", "移除")}</button>
+            <button class="remove-btn" onclick="removeFromCart(${product.id}, ${JSON.stringify(item.option || "")})">${t("Quitar", "移除")}</button>
           </div>
           <div class="qty-controls">
-            <button class="qty-btn" onclick="changeQty(${product.id}, -1)">-</button>
+            <button class="qty-btn" onclick="changeQty(${product.id}, -1, ${JSON.stringify(item.option || "")})">-</button>
             <span>${item.quantity}</span>
-            <button class="qty-btn" onclick="changeQty(${product.id}, 1)">+</button>
+            <button class="qty-btn" onclick="changeQty(${product.id}, 1, ${JSON.stringify(item.option || "")})">+</button>
           </div>
         </div>
       </div>
@@ -2060,8 +2066,10 @@ function openProduct(id) {
         <div>
           <h2>${productName(product)}</h2>
           ${productSizeHtml(product)}
+          ${productOptionsHtml(product)}
+          ${productOptionSelectHtml(product)}
 <p class="price">₡${money(product.price)}</p>
-          <button class="main-btn" onclick="addToCart(${product.id}, this); closeProduct(); document.getElementById('cartPanel').classList.remove('hidden');">
+          <button class="main-btn" onclick="addSelectedProductOption(${product.id}, this); closeProduct(); document.getElementById('cartPanel').classList.remove('hidden');">
             ${t("Agregar al carrito", "加入购物车")}
           </button>
         </div>
@@ -2105,6 +2113,7 @@ function checkout() {
       nameEs: product.nameEs,
       nameZh: product.nameZh,
       size: productSize(product),
+      option: item.option || "",
       quantity: item.quantity,
       price: product.price,
       image: product.images[0] || ""
@@ -2131,8 +2140,11 @@ function checkout() {
   saveData();
 
   const noteText = note ? `. Nota: ${note}` : "";
+  const productsText = orderProducts.map(product =>
+    `${product.nameEs}${product.size ? ` (${product.size})` : ""}${product.option ? ` - ${product.option}` : ""} x${product.quantity}`
+  ).join(", ");
   const message = encodeURIComponent(
-    `Nuevo pedido IMPORTADORA MORAZÁN. Nombre: ${name}. Teléfono: ${phone}. Dirección: ${address}${noteText}. Total: ₡${money(total)}`
+    `Nuevo pedido IMPORTADORA MORAZÁN. Nombre: ${name}. Teléfono: ${phone}. Dirección: ${address}. Productos: ${productsText}${noteText}. Total: ₡${money(total)}`
   );
 
   alert(t(
@@ -2174,7 +2186,7 @@ function checkOrderStatus() {
 
   const results = matchingOrders.slice().reverse().map(order => {
     const items = order.products.map(product =>
-      `${product.nameEs}${product.size ? ` (${product.size})` : ""} x${product.quantity}`
+      `${product.nameEs}${product.size ? ` (${product.size})` : ""}${product.option ? ` - ${product.option}` : ""} x${product.quantity}`
     ).join(", ");
 
     return `
