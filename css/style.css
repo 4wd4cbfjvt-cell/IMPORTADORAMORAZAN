@@ -331,14 +331,62 @@ a {
   margin: 14px 0 8px;
 }
 
-.product-option-select {
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-size: 16px;
+.option-picker {
+  display: grid;
+  gap: 14px;
+  margin: 12px 0 6px;
+}
+
+.option-choice {
+  display: grid;
+  grid-template-columns: 34px minmax(0, max-content) minmax(120px, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: #111;
+  font-size: 20px;
   font-weight: 800;
-  background: white;
+  cursor: pointer;
+}
+
+.option-choice input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.option-circle {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+
+.option-choice input[type="radio"]:checked + .option-circle {
+  border-color: #d60000;
+}
+
+.option-choice input[type="radio"]:checked + .option-circle::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  background: #d60000;
+  border-radius: 50%;
+}
+
+.option-other-input {
+  min-width: 0;
+  border: none;
+  border-bottom: 2px dotted #aaa;
+  padding: 8px 4px;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+
+.option-other-input:focus {
+  border-bottom-color: #d60000;
 }
 
 .price {
