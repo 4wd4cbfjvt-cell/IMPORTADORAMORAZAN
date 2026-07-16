@@ -1848,18 +1848,19 @@ function showProducts() {
   filtered.forEach(product => {
     const card = document.createElement("div");
     card.className = "product-card";
+    const productIdArg = JSON.stringify(product.id);
 
     card.innerHTML = `
-      <button class="favorite-btn ${isFavorite(product.id) ? "active" : ""}" onclick="event.stopPropagation(); toggleFavorite(${product.id})">
+      <button class="favorite-btn ${isFavorite(product.id) ? "active" : ""}" onclick="event.stopPropagation(); toggleFavorite(${productIdArg})">
         ${isFavorite(product.id) ? "♥" : "♡"}
       </button>
-      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${product.id})" loading="lazy" decoding="async">
+      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${productIdArg})" loading="lazy" decoding="async">
       <div class="product-info">
-        <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
+        <h3 onclick="openProduct(${productIdArg})">${productName(product)}</h3>
         ${productSizeHtml(product)}
         ${productInlineOptionsHtml(product)}
         <p class="price">₡${money(product.price)}</p>
-        <button onclick="${productOptions(product).length ? `addInlineProductOptions(${product.id}, this)` : `addToCart(${product.id}, this)`}">
+        <button onclick="${productOptions(product).length ? `addInlineProductOptions(${productIdArg}, this)` : `addToCart(${productIdArg}, this)`}">
           ${t("Agregar al carrito", "加入购物车")}
         </button>
       </div>
@@ -1895,16 +1896,17 @@ function showFavorites() {
   favoriteProducts.forEach(product => {
     const card = document.createElement("div");
     card.className = "product-card";
+    const productIdArg = JSON.stringify(product.id);
 
     card.innerHTML = `
-      <button class="favorite-btn active" onclick="event.stopPropagation(); toggleFavorite(${product.id})">♥</button>
-      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${product.id})" loading="lazy" decoding="async">
+      <button class="favorite-btn active" onclick="event.stopPropagation(); toggleFavorite(${productIdArg})">♥</button>
+      <img src="${product.images[0]}" alt="${productName(product)}" onclick="openProduct(${productIdArg})" loading="lazy" decoding="async">
       <div class="product-info">
-        <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
+        <h3 onclick="openProduct(${productIdArg})">${productName(product)}</h3>
         ${productSizeHtml(product)}
         ${productInlineOptionsHtml(product)}
         <p class="price">₡${money(product.price)}</p>
-        <button onclick="${productOptions(product).length ? `addInlineProductOptions(${product.id}, this)` : `addToCart(${product.id}, this)`}">
+        <button onclick="${productOptions(product).length ? `addInlineProductOptions(${productIdArg}, this)` : `addToCart(${productIdArg}, this)`}">
           ${t("Agregar al carrito", "加入购物车")}
         </button>
       </div>
@@ -1922,8 +1924,12 @@ function filterProducts(category) {
   showProducts();
 }
 
+function productIdKey(id) {
+  return String(id);
+}
+
 function addToCart(id, button, quantity = 1, option = "") {
-  const product = products.find(p => Number(p.id) === Number(id));
+  const product = products.find(p => productIdKey(p.id) === productIdKey(id));
   if (!product) return;
 
   const amount = Math.max(1, Number(quantity || 1));
@@ -1940,7 +1946,7 @@ function addToCart(id, button, quantity = 1, option = "") {
   if (existing) {
     existing.quantity = Number(existing.quantity || 0) + amount;
   } else {
-    cart.push({ id: Number(id), quantity: amount, option: selectedOption });
+    cart.push({ id: productIdKey(product.id), quantity: amount, option: selectedOption });
   }
 
   saveData();
@@ -1974,7 +1980,7 @@ function addSelectedProductOption(id, button) {
 
 function addInlineProductOptions(id, button) {
   const card = button.closest(".product-card");
-  const selectedOptions = Array.from(card?.querySelectorAll(`input[name="productOption-${id}"]:checked`) || []);
+  const selectedOptions = Array.from(card?.querySelectorAll(".inline-option-choice input[type='checkbox']:checked") || []);
 
   if (!selectedOptions.length) {
     alert(t("Elige al menos una opción.", "请至少选择一个选项。"));
@@ -2035,12 +2041,12 @@ function flyToCart(button) {
 
 
 function sameCartItem(item, id, option = "") {
-  return Number(item.id) === Number(id) && String(item.option || "") === String(option || "");
+  return productIdKey(item.id) === productIdKey(id) && String(item.option || "") === String(option || "");
 }
 
 function changeQty(id, amount, option = "") {
   const item = cart.find(i => sameCartItem(i, id, option));
-  const product = products.find(p => Number(p.id) === Number(id));
+  const product = products.find(p => productIdKey(p.id) === productIdKey(id));
   if (!item || !product) return;
 
   item.quantity = Math.max(0, Number(item.quantity || 0) + Number(amount || 0));
@@ -2067,17 +2073,19 @@ function updateCart() {
 
   const cleanedCart = cart.map(item => ({
     ...item,
-    id: Number(item.id),
+    id: productIdKey(item.id),
     quantity: Number(item.quantity || 0),
     option: String(item.option || "")
   })).filter(item => {
     const quantity = Number(item.quantity);
-    return products.some(product => Number(product.id) === Number(item.id)) && quantity > 0;
+    return products.some(product => productIdKey(product.id) === productIdKey(item.id)) && quantity > 0;
   });
 
-  if (cleanedCart.length !== cart.length) {
+  if (JSON.stringify(cleanedCart) !== JSON.stringify(cart)) {
     cart = cleanedCart;
     saveData();
+  } else {
+    cart = cleanedCart;
   }
 
   const totalItems = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -2093,11 +2101,13 @@ function updateCart() {
   let total = 0;
 
   cart.forEach(item => {
-    const product = products.find(p => Number(p.id) === Number(item.id));
+    const product = products.find(p => productIdKey(p.id) === productIdKey(item.id));
     if (!product) return;
 
-    const itemTotal = product.price * item.quantity;
+    const itemTotal = Number(product.price) * Number(item.quantity || 0);
     total += itemTotal;
+    const productIdArg = JSON.stringify(product.id);
+    const optionArg = JSON.stringify(item.option || "");
 
     cartItems.innerHTML += `
       <div class="cart-item">
@@ -2109,12 +2119,12 @@ function updateCart() {
             ${item.option ? `<p class="product-option-line">${t("Opción", "选项")}: ${item.option}</p>` : ""}
             <p>₡${money(product.price)}</p>
             <p class="item-total">${t("Total de este producto", "此产品总计")}: ₡${money(itemTotal)}</p>
-            <button class="remove-btn" onclick="removeFromCart(${product.id}, ${JSON.stringify(item.option || "")})">${t("Quitar", "移除")}</button>
+            <button class="remove-btn" onclick="removeFromCart(${productIdArg}, ${optionArg})">${t("Quitar", "移除")}</button>
           </div>
           <div class="qty-controls">
-            <button class="qty-btn" onclick="changeQty(${product.id}, -1, ${JSON.stringify(item.option || "")})">-</button>
+            <button class="qty-btn" onclick="changeQty(${productIdArg}, -1, ${optionArg})">-</button>
             <span>${item.quantity}</span>
-            <button class="qty-btn" onclick="changeQty(${product.id}, 1, ${JSON.stringify(item.option || "")})">+</button>
+            <button class="qty-btn" onclick="changeQty(${productIdArg}, 1, ${optionArg})">+</button>
           </div>
         </div>
       </div>
@@ -2125,7 +2135,7 @@ function updateCart() {
 }
 
 function openProduct(id) {
-  const product = products.find(p => p.id === id);
+  const product = products.find(p => productIdKey(p.id) === productIdKey(id));
   if (!product) return;
 
   const modal = document.createElement("div");
@@ -2187,16 +2197,18 @@ function checkout() {
 
   let total = 0;
   const orderProducts = cart.reduce((items, item) => {
-    const product = products.find(p => p.id === item.id);
+    const product = products.find(p => productIdKey(p.id) === productIdKey(item.id));
     if (!product) return items;
 
-    total += product.price * item.quantity;
+    const quantity = Number(item.quantity || 0);
+
+    total += Number(product.price) * quantity;
     items.push({
       nameEs: product.nameEs,
       nameZh: product.nameZh,
       size: productSize(product),
       option: item.option || "",
-      quantity: item.quantity,
+      quantity,
       price: product.price,
       image: product.images[0] || ""
     });
