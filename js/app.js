@@ -1800,6 +1800,11 @@ function productInlineOptionsHtml(product) {
   `;
 }
 
+function productOptionRowsClass(product) {
+  const optionRows = Math.ceil(productOptions(product).length / 2);
+  return `product-option-rows-${Math.min(optionRows, 6)}`;
+}
+
 function money(price) {
   return Number(price).toLocaleString("es-CR");
 }
@@ -1900,7 +1905,7 @@ function showProducts() {
 
   filtered.forEach(product => {
     const card = document.createElement("div");
-    card.className = "product-card";
+    card.className = `product-card ${productOptionRowsClass(product)}`;
     const productIdArg = jsArg(product.id);
 
     card.innerHTML = `
@@ -1948,7 +1953,7 @@ function showFavorites() {
 
   favoriteProducts.forEach(product => {
     const card = document.createElement("div");
-    card.className = "product-card";
+    card.className = `product-card ${productOptionRowsClass(product)}`;
     const productIdArg = jsArg(product.id);
 
     card.innerHTML = `
