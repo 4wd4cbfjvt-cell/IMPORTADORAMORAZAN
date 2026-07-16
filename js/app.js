@@ -1714,21 +1714,35 @@ function productOptionPickerHtml(product) {
   if (!options.length) return "";
 
   return `
-    <div class="option-picker" aria-label="${t("Elige una opción", "选择选项")}">
-      <p class="option-label">${t("Elige una opción", "选择选项")}</p>
+    <div class="option-picker" aria-label="${t("Elige opciones", "选择选项")}">
+      <p class="option-label">${t("Elige opciones y cantidad", "选择选项和数量")}</p>
       ${options.map(option => `
         <label class="option-choice">
-          <input type="radio" name="productOption" value="${escapeHtml(option)}">
+          <input type="checkbox" name="productOption" value="${escapeHtml(option)}">
           <span class="option-circle"></span>
           <span>${escapeHtml(option)}</span>
+          <input class="option-qty-input" type="number" min="1" value="1" aria-label="${t("Cantidad", "数量")}">
         </label>
       `).join("")}
-      <label class="option-choice option-other-choice">
-        <input type="radio" name="productOption" value="__other">
-        <span class="option-circle"></span>
-        <span>${t("Otro", "其他")}:</span>
-        <input id="productOptionOther" class="option-other-input" type="text" placeholder="${t("Escribe aquí", "在这里输入")}">
-      </label>
+    </div>
+  `;
+}
+
+function productInlineOptionsHtml(product) {
+  const options = productOptions(product);
+  if (!options.length) return productOptionsHtml(product);
+
+  return `
+    <div class="inline-option-picker" aria-label="${t("Opciones", "选项")}">
+      <p class="product-options">${t("Opciones", "选项")}:</p>
+      ${options.map(option => `
+        <label class="inline-option-choice">
+          <input type="checkbox" name="productOption-${product.id}" value="${escapeHtml(option)}">
+          <span class="option-circle"></span>
+          <span>${escapeHtml(option)}</span>
+          <input class="inline-option-qty" type="number" min="1" value="1" aria-label="${t("Cantidad", "数量")}">
+        </label>
+      `).join("")}
     </div>
   `;
 }
@@ -1843,9 +1857,9 @@ function showProducts() {
       <div class="product-info">
         <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
         ${productSizeHtml(product)}
-        ${productOptionsHtml(product)}
+        ${productInlineOptionsHtml(product)}
         <p class="price">₡${money(product.price)}</p>
-        <button onclick="${productOptions(product).length ? `openProduct(${product.id})` : `addToCart(${product.id}, this)`}">
+        <button onclick="${productOptions(product).length ? `addInlineProductOptions(${product.id}, this)` : `addToCart(${product.id}, this)`}">
           ${t("Agregar al carrito", "加入购物车")}
         </button>
       </div>
@@ -1888,9 +1902,9 @@ function showFavorites() {
       <div class="product-info">
         <h3 onclick="openProduct(${product.id})">${productName(product)}</h3>
         ${productSizeHtml(product)}
-        ${productOptionsHtml(product)}
+        ${productInlineOptionsHtml(product)}
         <p class="price">₡${money(product.price)}</p>
-        <button onclick="${productOptions(product).length ? `openProduct(${product.id})` : `addToCart(${product.id}, this)`}">
+        <button onclick="${productOptions(product).length ? `addInlineProductOptions(${product.id}, this)` : `addToCart(${product.id}, this)`}">
           ${t("Agregar al carrito", "加入购物车")}
         </button>
       </div>
@@ -1938,19 +1952,46 @@ function addToCart(id, button, quantity = 1, option = "") {
 }
 
 function addSelectedProductOption(id, button) {
-  const selected = document.querySelector('input[name="productOption"]:checked');
-  let option = selected ? selected.value : "";
+  const selectedOptions = Array.from(document.querySelectorAll('input[name="productOption"]:checked'));
 
-  if (option === "__other") {
-    option = document.getElementById("productOptionOther")?.value.trim() || "";
-  }
-
-  if (!option) {
-    alert(t("Elige una opción o escribe otra.", "请选择一个选项或输入其他选项。"));
+  if (!selectedOptions.length) {
+    alert(t("Elige al menos una opción.", "请至少选择一个选项。"));
     return false;
   }
 
-  addToCart(id, button, 1, option);
+  selectedOptions.forEach(optionInput => {
+    const row = optionInput.closest(".option-choice");
+    const quantity = Number(row?.querySelector(".option-qty-input")?.value || 1);
+    addToCart(id, null, quantity, optionInput.value);
+  });
+
+  if (button) {
+    flyToCart(button);
+  }
+
+  return true;
+}
+
+function addInlineProductOptions(id, button) {
+  const card = button.closest(".product-card");
+  const selectedOptions = Array.from(card?.querySelectorAll(`input[name="productOption-${id}"]:checked`) || []);
+
+  if (!selectedOptions.length) {
+    alert(t("Elige al menos una opción.", "请至少选择一个选项。"));
+    return false;
+  }
+
+  selectedOptions.forEach(optionInput => {
+    const row = optionInput.closest(".inline-option-choice");
+    const quantity = Number(row?.querySelector(".inline-option-qty")?.value || 1);
+    addToCart(id, null, quantity, optionInput.value);
+  });
+
+  if (button) {
+    flyToCart(button);
+  }
+
+  document.getElementById("cartPanel").classList.remove("hidden");
   return true;
 }
 
