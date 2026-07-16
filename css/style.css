@@ -1042,16 +1042,17 @@ a {
 
   .hero {
     min-height: calc(100svh - 62px);
-    padding: 24px 16px;
-    align-items: center;
-    background-size: cover;
+    padding: 0 16px 28px;
+    align-items: flex-start;
+    background-size: 100% auto;
     background-position: center top;
   }
 
   .hero-card {
     width: 100%;
     max-width: 360px;
-    padding: 20px 10px;
+    padding: 0 10px;
+    margin-top: clamp(300px, 48svh, 430px);
     border-radius: 0;
   }
 
@@ -1141,7 +1142,7 @@ a {
 /* SHOW FULL BACKGROUND IMAGE ON PHONE */
 @media (max-width: 600px) {
   .hero {
-    background-size: cover;
+    background-size: 100% auto;
     background-position: center top;
     background-repeat: no-repeat;
     background-color: #d60000;
