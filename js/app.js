@@ -1923,7 +1923,7 @@ function filterProducts(category) {
 }
 
 function addToCart(id, button, quantity = 1, option = "") {
-  const product = products.find(p => p.id === id);
+  const product = products.find(p => Number(p.id) === Number(id));
   if (!product) return;
 
   const amount = Math.max(1, Number(quantity || 1));
@@ -1935,12 +1935,12 @@ function addToCart(id, button, quantity = 1, option = "") {
     return;
   }
 
-  const existing = cart.find(item => item.id === id && (item.option || "") === selectedOption);
+  const existing = cart.find(item => sameCartItem(item, id, selectedOption));
 
   if (existing) {
-    existing.quantity += amount;
+    existing.quantity = Number(existing.quantity || 0) + amount;
   } else {
-    cart.push({ id, quantity: amount, option: selectedOption });
+    cart.push({ id: Number(id), quantity: amount, option: selectedOption });
   }
 
   saveData();
@@ -1991,7 +1991,6 @@ function addInlineProductOptions(id, button) {
     flyToCart(button);
   }
 
-  document.getElementById("cartPanel").classList.remove("hidden");
   return true;
 }
 
@@ -2035,15 +2034,19 @@ function flyToCart(button) {
 }
 
 
+function sameCartItem(item, id, option = "") {
+  return Number(item.id) === Number(id) && String(item.option || "") === String(option || "");
+}
+
 function changeQty(id, amount, option = "") {
-  const item = cart.find(i => i.id === id && (i.option || "") === option);
-  const product = products.find(p => p.id === id);
+  const item = cart.find(i => sameCartItem(i, id, option));
+  const product = products.find(p => Number(p.id) === Number(id));
   if (!item || !product) return;
 
-  item.quantity += amount;
+  item.quantity = Math.max(0, Number(item.quantity || 0) + Number(amount || 0));
 
   if (item.quantity <= 0) {
-    cart = cart.filter(i => !(i.id === id && (i.option || "") === option));
+    cart = cart.filter(i => !sameCartItem(i, id, option));
   }
 
 
@@ -2052,7 +2055,7 @@ function changeQty(id, amount, option = "") {
 }
 
 function removeFromCart(id, option = "") {
-  cart = cart.filter(i => !(i.id === id && (i.option || "") === option));
+  cart = cart.filter(i => !sameCartItem(i, id, option));
   saveData();
   updateCart();
 }
@@ -2062,9 +2065,14 @@ function updateCart() {
   const cartCount = document.getElementById("cartCount");
   const cartTotal = document.getElementById("cartTotal");
 
-  const cleanedCart = cart.filter(item => {
+  const cleanedCart = cart.map(item => ({
+    ...item,
+    id: Number(item.id),
+    quantity: Number(item.quantity || 0),
+    option: String(item.option || "")
+  })).filter(item => {
     const quantity = Number(item.quantity);
-    return products.some(product => product.id === item.id) && quantity > 0;
+    return products.some(product => Number(product.id) === Number(item.id)) && quantity > 0;
   });
 
   if (cleanedCart.length !== cart.length) {
@@ -2072,7 +2080,7 @@ function updateCart() {
     saveData();
   }
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   cartCount.textContent = totalItems;
   cartItems.innerHTML = "";
 
@@ -2085,7 +2093,7 @@ function updateCart() {
   let total = 0;
 
   cart.forEach(item => {
-    const product = products.find(p => p.id === item.id);
+    const product = products.find(p => Number(p.id) === Number(item.id));
     if (!product) return;
 
     const itemTotal = product.price * item.quantity;
@@ -2143,7 +2151,7 @@ function openProduct(id) {
           ${productOptionsHtml(product)}
           ${productOptionPickerHtml(product)}
 <p class="price">₡${money(product.price)}</p>
-          <button class="main-btn" onclick="if (addSelectedProductOption(${product.id}, this)) { closeProduct(); document.getElementById('cartPanel').classList.remove('hidden'); }">
+          <button class="main-btn" onclick="if (addSelectedProductOption(${product.id}, this)) { closeProduct(); }">
             ${t("Agregar al carrito", "加入购物车")}
           </button>
         </div>
