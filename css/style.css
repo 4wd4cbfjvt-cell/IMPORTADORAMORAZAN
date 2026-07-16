@@ -337,9 +337,60 @@ a {
   margin: 12px 0 6px;
 }
 
+.inline-option-picker {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.inline-option-choice {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 66px;
+  align-items: center;
+  gap: 8px;
+  color: #111;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inline-option-choice input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.inline-option-choice .option-circle {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+.inline-option-choice input[type="checkbox"]:checked + .option-circle {
+  border-color: #d60000;
+}
+
+.inline-option-choice input[type="checkbox"]:checked + .option-circle::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: #d60000;
+  border-radius: 50%;
+}
+
+.inline-option-qty {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 7px 6px;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .option-choice {
   display: grid;
-  grid-template-columns: 34px minmax(0, max-content) minmax(120px, 1fr);
+  grid-template-columns: 34px minmax(0, 1fr) 86px;
   align-items: center;
   gap: 12px;
   color: #111;
@@ -348,7 +399,7 @@ a {
   cursor: pointer;
 }
 
-.option-choice input[type="radio"] {
+.option-choice input[type="checkbox"] {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -363,11 +414,11 @@ a {
   position: relative;
 }
 
-.option-choice input[type="radio"]:checked + .option-circle {
+.option-choice input[type="checkbox"]:checked + .option-circle {
   border-color: #d60000;
 }
 
-.option-choice input[type="radio"]:checked + .option-circle::after {
+.option-choice input[type="checkbox"]:checked + .option-circle::after {
   content: "";
   position: absolute;
   inset: 6px;
@@ -375,18 +426,14 @@ a {
   border-radius: 50%;
 }
 
-.option-other-input {
-  min-width: 0;
-  border: none;
-  border-bottom: 2px dotted #aaa;
-  padding: 8px 4px;
-  font: inherit;
-  font-weight: 700;
-  outline: none;
-}
-
-.option-other-input:focus {
-  border-bottom-color: #d60000;
+.option-qty-input {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 9px 10px;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
 }
 
 .price {
@@ -1198,6 +1245,32 @@ a {
     padding: 9px 8px;
     font-size: 12px;
     line-height: 1.1;
+  }
+
+  .inline-option-picker {
+    gap: 6px;
+  }
+
+  .inline-option-choice {
+    grid-template-columns: 20px minmax(0, 1fr) 48px;
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .inline-option-choice .option-circle {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+  }
+
+  .inline-option-choice input[type="checkbox"]:checked + .option-circle::after {
+    inset: 4px;
+  }
+
+  .inline-option-qty {
+    border-radius: 9px;
+    font-size: 11px;
+    padding: 5px 4px;
   }
 }
 
