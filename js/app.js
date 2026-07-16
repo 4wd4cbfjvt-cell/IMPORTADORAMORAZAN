@@ -1702,6 +1702,18 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function jsArg(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return `'${String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n")}'`;
+}
+
 function productOptionsHtml(product) {
   const options = productOptions(product);
   return options.length
@@ -1848,7 +1860,7 @@ function showProducts() {
   filtered.forEach(product => {
     const card = document.createElement("div");
     card.className = "product-card";
-    const productIdArg = JSON.stringify(product.id);
+    const productIdArg = jsArg(product.id);
 
     card.innerHTML = `
       <button class="favorite-btn ${isFavorite(product.id) ? "active" : ""}" onclick="event.stopPropagation(); toggleFavorite(${productIdArg})">
@@ -1896,7 +1908,7 @@ function showFavorites() {
   favoriteProducts.forEach(product => {
     const card = document.createElement("div");
     card.className = "product-card";
-    const productIdArg = JSON.stringify(product.id);
+    const productIdArg = jsArg(product.id);
 
     card.innerHTML = `
       <button class="favorite-btn active" onclick="event.stopPropagation(); toggleFavorite(${productIdArg})">♥</button>
@@ -2106,8 +2118,8 @@ function updateCart() {
 
     const itemTotal = Number(product.price) * Number(item.quantity || 0);
     total += itemTotal;
-    const productIdArg = JSON.stringify(product.id);
-    const optionArg = JSON.stringify(item.option || "");
+    const productIdArg = jsArg(product.id);
+    const optionArg = jsArg(item.option || "");
 
     cartItems.innerHTML += `
       <div class="cart-item">
@@ -2141,13 +2153,14 @@ function openProduct(id) {
   const modal = document.createElement("div");
   modal.className = "modal";
   modal.id = "productModal";
+  const productIdArg = jsArg(product.id);
 
-  const gallery = product.images.map(img => `<img src="${img}" onclick="document.getElementById('modalMainImg').src='${img}'" loading="lazy" decoding="async">`).join("");
+  const gallery = product.images.map(img => `<img src="${img}" onclick="document.getElementById('modalMainImg').src=${jsArg(img)}" loading="lazy" decoding="async">`).join("");
 
   modal.innerHTML = `
     <div class="modal-card">
       <button class="close-btn" onclick="closeProduct()">×</button>
-      <button class="favorite-btn modal-favorite ${isFavorite(product.id) ? "active" : ""}" onclick="toggleFavorite(${product.id})">
+      <button class="favorite-btn modal-favorite ${isFavorite(product.id) ? "active" : ""}" onclick="toggleFavorite(${productIdArg})">
         ${isFavorite(product.id) ? "♥" : "♡"}
       </button>
       <div class="modal-grid">
@@ -2161,7 +2174,7 @@ function openProduct(id) {
           ${productOptionsHtml(product)}
           ${productOptionPickerHtml(product)}
 <p class="price">₡${money(product.price)}</p>
-          <button class="main-btn" onclick="if (addSelectedProductOption(${product.id}, this)) { closeProduct(); }">
+          <button class="main-btn" onclick="if (addSelectedProductOption(${productIdArg}, this)) { closeProduct(); }">
             ${t("Agregar al carrito", "加入购物车")}
           </button>
         </div>
