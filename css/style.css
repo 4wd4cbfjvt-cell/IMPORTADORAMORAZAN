@@ -282,7 +282,7 @@ a {
 .product-card {
   --inline-option-label-space: 28px;
   --inline-option-row-gap: 8px;
-  --inline-option-row-space: 46px;
+  --inline-option-row-space: 38px;
   --option-rows: 0;
   background: white;
   border-radius: 26px;
@@ -387,16 +387,16 @@ a {
 
 .inline-option-choice {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 52px;
+  grid-template-columns: 18px minmax(0, 1fr) 32px;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
   height: var(--inline-option-row-space);
   min-width: 0;
-  padding: 6px;
+  padding: 4px;
   border-radius: 12px;
   background: #fafafa;
   color: #111;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -408,9 +408,9 @@ a {
 }
 
 .inline-option-choice .option-circle {
-  width: 22px;
-  height: 22px;
-  border-width: 3px;
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
 }
 
 .inline-option-choice input[type="checkbox"]:checked + .option-circle {
@@ -429,15 +429,16 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .inline-option-qty {
-  width: 52px;
-  height: 34px;
+  width: 32px;
+  height: 28px;
   border: 1px solid #ddd;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 900;
   text-align: center;
   appearance: textfield;
@@ -1275,7 +1276,7 @@ a {
   .product-card {
     --inline-option-label-space: 17px;
     --inline-option-row-gap: 5px;
-    --inline-option-row-space: 30px;
+    --inline-option-row-space: 28px;
     display: grid;
     grid-template-rows: auto 1fr;
     border: 1px solid #ededed;
@@ -1360,13 +1361,13 @@ a {
   }
 
   .inline-option-choice {
-    grid-template-columns: 18px minmax(0, 1fr) 38px;
-    gap: 5px;
-    min-height: 30px;
-    padding: 3px 4px;
+    grid-template-columns: 16px minmax(0, 1fr) 30px;
+    gap: 4px;
+    min-height: 28px;
+    padding: 3px;
     border-radius: 10px;
     background: #fafafa;
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .inline-option-choice span:not(.option-circle) {
@@ -1376,8 +1377,8 @@ a {
   }
 
   .inline-option-choice .option-circle {
-    width: 17px;
-    height: 17px;
+    width: 16px;
+    height: 16px;
     border-width: 2px;
   }
 
@@ -1386,12 +1387,12 @@ a {
   }
 
   .inline-option-qty {
-    width: 38px;
-    height: 28px;
+    width: 30px;
+    height: 24px;
     border: 1px solid #ddd;
-    border-radius: 10px;
+    border-radius: 9px;
     padding: 0;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 900;
     text-align: center;
     appearance: textfield;
