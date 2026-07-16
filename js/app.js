@@ -1532,6 +1532,7 @@ function productStorageSnapshot(product) {
     price: product.price,
     size: size || "",
     category: product.category,
+    options: product.options || [],
     images: product.images || []
   };
 }
@@ -1628,7 +1629,7 @@ function mergeProductLists(...productLists) {
 
   productLists.flat().forEach(product => {
     if (product && product.id) {
-      mergedProducts.set(Number(product.id), product);
+      mergedProducts.set(productIdKey(product.id), product);
     }
   });
 
@@ -1638,11 +1639,32 @@ function mergeProductLists(...productLists) {
 async function loadSavedProducts() {
   try {
     const serverCatalog = await readServerCatalog();
+    let savedProducts = [];
+    let legacyProducts = [];
+
+    try {
+      legacyProducts = storedProducts();
+    } catch (error) {
+      legacyProducts = [];
+    }
+
+    try {
+      savedProducts = await readProductDatabase();
+    } catch (error) {
+      console.warn("No se pudo cargar IndexedDB.", error);
+    }
 
     if (serverCatalog) {
-      const deletedIds = new Set(serverCatalog.deletedIds || []);
+      const deletedIds = new Set([
+        ...(serverCatalog.deletedIds || []),
+        ...deletedProductIds()
+      ]);
       localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify([...deletedIds]));
-      products = seedProducts(normalizeProducts(serverCatalog.customProducts || []));
+      products = seedProducts(normalizeProducts(mergeProductLists(
+        serverCatalog.customProducts || [],
+        legacyProducts,
+        savedProducts
+      )));
       try {
         await writeProductDatabase(customProductsForStorage());
         localStorage.removeItem(LEGACY_PRODUCTS_KEY);
@@ -1655,8 +1677,22 @@ async function loadSavedProducts() {
       return;
     }
 
-    localStorage.removeItem(LEGACY_PRODUCTS_KEY);
-    localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
+    const fallbackProducts = mergeProductLists(legacyProducts, savedProducts);
+
+    if (fallbackProducts.length) {
+      products = seedProducts(normalizeProducts(fallbackProducts));
+    } else {
+      products = seedProducts(normalizeProducts(products));
+    }
+
+    try {
+      await writeProductDatabase(customProductsForStorage());
+      localStorage.removeItem(LEGACY_PRODUCTS_KEY);
+      localStorage.removeItem(CUSTOM_PRODUCTS_KEY);
+    } catch (error) {
+      console.warn("No se pudo preservar productos recuperados.", error);
+    }
+
     catalogReady = true;
     applyLanguage();
   } catch (error) {
@@ -2354,7 +2390,6 @@ if (favoriteNavBtn) {
   });
 }
 
-applyLanguage();
 loadSavedProducts();
 
 const menuBtn=document.getElementById("menuBtn");
